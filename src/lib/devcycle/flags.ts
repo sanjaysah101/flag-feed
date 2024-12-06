@@ -3,10 +3,12 @@ export const FLAGS = {
     ADVANCED_FILTERING: "rss-advanced-filtering",
     SMART_CATEGORIZATION: "rss-smart-categorization",
     CUSTOM_SOURCES: "rss-custom-sources",
+    PERSONALIZATION: "rss-personalization",
   },
   GAMIFICATION: {
-    POINT_MULTIPLIERS: "gamification-point-multipliers",
-    SPECIAL_EVENTS: "gamification-special-events",
+    POINTS: "gamification-points",
+    BADGES: "gamification-badges",
+    LEADERBOARD: "gamification-leaderboard",
     ACHIEVEMENTS: "gamification-achievements",
   },
   LEARNING: {
