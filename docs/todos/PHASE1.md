@@ -5,7 +5,7 @@
 - [x] Initialize Next.js 15 project
 - [x] Configure TypeScript
 - [x] Set up MongoDB connection
-- [ ] Install and configure DevCycle SDK
+- [x] Install and configure DevCycle SDK
 
 ## Authentication
 
