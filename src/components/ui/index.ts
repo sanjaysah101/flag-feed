@@ -15,7 +15,6 @@ export * from "./progress";
 export * from "./select";
 export * from "./separator";
 export * from "./sidebar";
-export * from "./signin-with-google";
 export * from "./slider";
 export * from "./table";
 export * from "./textarea";

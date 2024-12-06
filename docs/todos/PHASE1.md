@@ -9,9 +9,9 @@
 
 ## Authentication
 
-- [ ] Implement NextAuth.js
-- [ ] Create user model
-- [ ] Set up authentication API routes
+- [x] Implement NextAuth.js
+- [x] Create user model
+- [x] Set up authentication API routes
 - [ ] Build login/register UI
 
 ## Basic Infrastructure
