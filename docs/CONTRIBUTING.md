@@ -20,7 +20,7 @@
 type(scope): description
 
 [optional body]
-    
+
 [optional footer]
 ```
 

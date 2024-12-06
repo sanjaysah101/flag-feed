@@ -9,15 +9,18 @@
 ## Core Components
 
 1. **API Layer** (`app/api/`)
+
    - REST endpoints for RSS feeds, user data, and gamification
    - Feature flag controlled endpoints
 
 2. **Database Layer** (`app/lib/db/`)
+
    - MongoDB connection
    - Data models and schemas
    - Query utilities
 
 3. **Feature Flags** (`app/lib/devcycle/`)
+
    - Flag configurations
    - Integration utilities
    - A/B testing setup

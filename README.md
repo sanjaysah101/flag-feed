@@ -1,36 +1,110 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FlagFeed 📰
 
-## Getting Started
+A developer-focused learning platform that combines RSS feed curation with gamification, powered by
+DevCycle feature flags.
 
-First, run the development server:
+## Overview 🎯
+
+FlagFeed helps developers stay updated with tech content through personalized RSS feeds while making
+learning engaging through gamification. Using DevCycle's feature flag system, we progressively
+enhance the learning experience.
+
+## Features ✨
+
+### Core Features
+
+- 📚 Curated tech RSS feeds
+- 🎮 Learn-and-earn points system
+- 🚀 Progressive feature rollouts
+- ✅ Simple knowledge checks
+
+### Feature Flags
+
+- 🔄 Advanced feed filtering
+- 🏆 Gamification elements
+- 📊 Learning analytics
+- 🎯 Personalized content
+
+## Tech Stack 💻
+
+- **Frontend & Backend**: [Next.js 14](https://nextjs.org/)
+- **Database**: [MongoDB](https://www.mongodb.com/)
+- **Feature Flags**: [DevCycle](https://devcycle.com/)
+- **Deployment**: [Vercel](https://vercel.com/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+
+## Getting Started 🚀
+
+### Prerequisites
+
+- Node.js 18+
+- pnpm
+- MongoDB connection
+- DevCycle account
+
+### Installation
+
+#### 1. Clone the repository
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/yourusername/flagfeed.git
+cd flagfeed
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+#### 2. Install dependencies
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+pnpm install
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+#### 3. Set up environment variables
 
-## Learn More
+```bash
+cp .env.example .env.local
+```
 
-To learn more about Next.js, take a look at the following resources:
+#### 4. Update `.env.local` with your credentials
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```env
+MONGODB_URI=your_mongodb_uri
+DEVCYCLE_CLIENT_KEY=your_devcycle_client_key
+DEVCYCLE_SERVER_KEY=your_devcycle_server_key
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+#### 5. Run the development server
 
-## Deploy on Vercel
+```bash
+pnpm dev
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Open [http://localhost:3000](http://localhost:3000) to see the app.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Scripts 📝
+
+- `pnpm dev` - Start development server
+- `pnpm build` - Build for production
+- `pnpm start` - Start production server
+- `pnpm lint` - Run ESLint
+- `pnpm format` - Format code with Prettier
+
+## Contributing 🤝
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## License 📄
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments 🙏
+
+- DevCycle for the feature flag challenge
+- Next.js team for the amazing framework
+- All contributors and supporters
+
+---
+
+Built with ❤️ for the [DevCycle Feature Flag Hackathon](https://dev.to/challenges/devcycle)

@@ -3,16 +3,19 @@
 ## User Management
 
 1. User Registration & Authentication
+
    - Email/password registration
    - Social login options
    - Profile management
 
 2. RSS Feed Management
+
    - Feed subscription
    - Category filtering
    - Personalization settings
 
 3. Gamification
+
    - Point system
    - Badge system
    - Leaderboard
