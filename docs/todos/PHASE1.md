@@ -2,9 +2,9 @@
 
 ## Initial Setup
 
-- [ ] Initialize Next.js 15 project
-- [ ] Configure TypeScript
-- [ ] Set up MongoDB connection
+- [x] Initialize Next.js 15 project
+- [x] Configure TypeScript
+- [x] Set up MongoDB connection
 - [ ] Install and configure DevCycle SDK
 
 ## Authentication
