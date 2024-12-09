@@ -3,13 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { useSession } from "next-auth/react";
+import { User } from "@prisma/client";
 
 import { cn } from "@/lib/utils";
 
-export const MainNav = () => {
+export const MainNav = ({ user }: { user: User | null }) => {
   const pathname = usePathname();
-  const { data: session } = useSession();
 
   const publicLinks = [
     { href: "/", label: "Home" },
@@ -24,7 +23,7 @@ export const MainNav = () => {
     { href: "/profile", label: "Profile" },
   ];
 
-  const links = session ? [...publicLinks, ...protectedLinks] : publicLinks;
+  const links = user ? [...publicLinks, ...protectedLinks] : publicLinks;
 
   return (
     <nav className="flex items-center space-x-6">

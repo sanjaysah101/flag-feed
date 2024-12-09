@@ -1,17 +1,14 @@
 import { NextResponse } from "next/server";
 
-import { getCurrentUser } from "@/lib/auth/utils";
+import { protectApiRoute } from "@/lib/auth/protect-api";
 import { RSSService } from "@/lib/services/rss.service";
 
 export const GET = async () => {
+  const session = await protectApiRoute();
+  if (session instanceof NextResponse) return session;
+
   try {
-    const user = await getCurrentUser();
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const feeds = await RSSService.processFeeds(user.id);
-
+    const feeds = await RSSService.processFeeds(session.user.id);
     return NextResponse.json({ feeds });
   } catch (error) {
     // eslint-disable-next-line no-console

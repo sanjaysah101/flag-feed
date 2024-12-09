@@ -1,16 +1,13 @@
-"use client";
-
 import Link from "next/link";
 
-import { useSession } from "next-auth/react";
-
 import { MainNav } from "@/components";
-import { Button } from "@/components/ui";
 
+import { getCurrentUser } from "../../lib/auth/utils";
 import ThemeToggle from "../theme/ThemeToggle";
+import { Button } from "../ui";
 
-export const SiteHeader = () => {
-  const { data: session } = useSession();
+export const SiteHeader = async () => {
+  const user = await getCurrentUser();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -18,10 +15,10 @@ export const SiteHeader = () => {
         <Link href="/" className="mr-6 flex items-center space-x-2">
           <span className="font-bold">FlagFeed</span>
         </Link>
-        <MainNav />
+        <MainNav user={user} />
         <div className="ml-auto flex items-center space-x-4">
           <ThemeToggle />
-          {!session?.user ? (
+          {!user ? (
             <Button asChild variant="secondary" size="sm">
               <Link href="/auth/signin">Sign In</Link>
             </Button>

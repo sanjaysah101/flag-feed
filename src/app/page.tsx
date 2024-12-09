@@ -1,7 +1,7 @@
-import { getCurrentUser } from "@/lib/auth/utils";
+import { auth } from "@/auth";
 
 export default async function Home() {
-  const user = await getCurrentUser();
+  const session = await auth();
 
-  return <div>{JSON.stringify(user)}</div>;
+  return <div>{JSON.stringify(session)}</div>;
 }

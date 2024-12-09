@@ -1,12 +1,8 @@
-import { getServerSession } from "next-auth/next";
+import { User } from "@prisma/client";
 
-import { authOptions } from "./auth.config";
+import { auth } from "@/auth";
 
-export const getSession = async () => {
-  return await getServerSession(authOptions);
-};
-
-export const getCurrentUser = async () => {
-  const session = await getSession();
-  return session?.user;
+export const getCurrentUser = async (): Promise<User | null> => {
+  const session = await auth();
+  return session?.user as User | null;
 };

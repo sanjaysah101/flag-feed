@@ -1,15 +1,13 @@
-import { withAuth } from "next-auth/middleware";
+export { auth as middleware } from "@/auth";
 
-export default withAuth({
-  callbacks: {
-    authorized: ({ token }) => !!token,
-  },
-  pages: {
-    signIn: "/auth/signin",
-  },
-});
-
-// Protect all routes under /dashboard, /feeds, /profile, and /learn
 export const config = {
-  matcher: ["/dashboard/:path*", "/feeds/:path*", "/profile/:path*", "/learn/:path*"],
+  matcher: [
+    // Protected routes
+    "/dashboard/:path*",
+    "/feeds/:path*",
+    "/profile/:path*",
+    "/learn/:path*",
+    // Exclude
+    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.png$).*)",
+  ],
 };
