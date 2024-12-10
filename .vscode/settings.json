@@ -21,7 +21,17 @@
   "[json]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "cSpell.words": ["Clientside", "DEVCYCLE", "gamification", "gamified", "hookform", "tanstack", "trivago"],
+  "cSpell.words": [
+    "Clientside",
+    "DEVCYCLE",
+    "gamification",
+    "gamified",
+    "hookform",
+    "NEXTAUTH",
+    "SUPABASE",
+    "tanstack",
+    "trivago"
+  ],
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   }
