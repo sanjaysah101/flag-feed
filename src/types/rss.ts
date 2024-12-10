@@ -1,33 +1,49 @@
+export type FeedCategory =
+  | "PROGRAMMING"
+  | "DEVOPS"
+  | "WEB_DEVELOPMENT"
+  | "MOBILE"
+  | "AI_ML"
+  | "CLOUD"
+  | "SECURITY"
+  | "BLOCKCHAIN"
+  | "DATA_SCIENCE";
+
 export interface RSSFeed {
   id: string;
   url: string;
   title: string;
   description?: string;
-  category: string;
+  category: FeedCategory;
+  userId: string;
   lastFetched?: Date;
   createdAt: Date;
   updatedAt: Date;
+  items: RSSItem[];
 }
 
 export interface RSSItem {
   id: string;
   feedId: string;
+  userId: string;
   title: string;
   description: string;
-  content: string;
   link: string;
   pubDate: Date;
   author?: string;
-  categories: string[];
+  categories?: string[];
+  content?: string;
+  isRead?: boolean;
+  isSaved?: boolean;
   createdAt: Date;
 }
 
-export interface RSSCategory {
-  id: string;
-  name: string;
-  slug: string;
-  description?: string;
-  parentId?: string;
-  createdAt: Date;
-  updatedAt: Date;
+export interface FeedResponse {
+  feed: RSSFeed;
+  items: RSSItem[];
+}
+
+export interface FeedListResponse {
+  feeds: RSSFeed[];
+  totalCount: number;
 }

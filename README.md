@@ -27,7 +27,7 @@ enhance the learning experience.
 
 ## Tech Stack 💻
 
-- **Frontend & Backend**: [Next.js 14](https://nextjs.org/)
+- **Frontend & Backend**: [Next.js 15](https://nextjs.org/)
 - **Database**: [MongoDB](https://www.mongodb.com/)
 - **Feature Flags**: [DevCycle](https://devcycle.com/)
 - **Deployment**: [Vercel](https://vercel.com/)
