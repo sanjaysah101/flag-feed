@@ -20,6 +20,7 @@ export interface RSSFeed {
   createdAt: Date;
   updatedAt: Date;
   items: RSSItem[];
+  isRefreshing?: boolean;
 }
 
 export interface RSSItem {

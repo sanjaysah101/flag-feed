@@ -113,3 +113,51 @@ export const addFeed = async (userId: string, url: string, category: FeedCategor
     throw error;
   }
 };
+
+export const deleteFeed = async (feedId: string, userId: string) => {
+  try {
+    const feed = await prisma.feed.findFirst({
+      where: { id: feedId, userId },
+    });
+
+    if (!feed) {
+      throw new Error("Feed not found");
+    }
+
+    await prisma.feed.delete({
+      where: { id: feedId },
+    });
+
+    return { success: true };
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error("Error deleting feed:", error);
+    throw new Error("Failed to delete feed");
+  }
+};
+
+export const refreshFeed = async (feedId: string, userId: string) => {
+  try {
+    const feed = await prisma.feed.findFirst({
+      where: { id: feedId, userId },
+    });
+
+    if (!feed) {
+      throw new Error("Feed not found");
+    }
+
+    // Delete existing items
+    await prisma.feedItem.deleteMany({
+      where: { feedId },
+    });
+
+    // Fetch new items
+    const items = await fetchAndParseFeed(feed as RSSFeed);
+
+    return { ...feed, items };
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error("Error refreshing feed:", error);
+    throw new Error("Failed to refresh feed");
+  }
+};
