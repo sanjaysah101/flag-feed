@@ -39,5 +39,9 @@ export const authOptions = {
     signIn: "/auth/signin",
     error: "/auth/error",
   },
+  secret: process.env.AUTH_SECRET,
+  session: {
+    strategy: "jwt",
+  },
   debug: process.env.NODE_ENV === "development",
 };
