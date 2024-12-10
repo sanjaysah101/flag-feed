@@ -39,7 +39,12 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <AuthProvider>
-          <DevCycleClientsideProvider context={getClientContext()}>
+          <DevCycleClientsideProvider
+            context={{
+              ...getClientContext(),
+              enableStreaming: true,
+            }}
+          >
             <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
               <ReactQueryProvider>
                 <div className="relative flex min-h-screen flex-col">

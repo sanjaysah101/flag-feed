@@ -16,7 +16,7 @@
 
 ## Basic Infrastructure
 
-- [ ] Create API route structure
-- [ ] Set up database models
+- [x] Create API route structure
+- [x] Set up database models
 - [ ] Configure feature flag basics
 - [ ] Implement error handling

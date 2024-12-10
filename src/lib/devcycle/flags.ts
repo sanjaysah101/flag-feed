@@ -8,7 +8,8 @@ export const FLAGS = {
   GAMIFICATION: {
     BADGES: "gamification-badges",
     WEEKLY_CHALLENGES: "gamification-challenges",
-    POINT_BOOSTS: "gamification-point-boosts",
+    POINT_BOOST: "gamification-point-boost",
+    LEADERBOARD: "gamification-leaderboard",
   },
   UI: {
     BETA_FEATURES: "ui-beta-features",

@@ -22,11 +22,11 @@ const getUserIdentity = async () => {
   };
 };
 
-export const { getVariableValue, getClientContext } = setupDevCycle({
+export const { getVariableValue, getClientContext, getAllFeatures } = setupDevCycle({
   // Server SDK Key for configuration data
-  serverSDKKey: process.env.NEXT_PUBLIC_DEVCYCLE_SERVER_SDK_KEY ?? "",
+  serverSDKKey: process.env.NEXT_PUBLIC_DEVCYCLE_SERVER_SDK_KEY || "",
   // Client SDK Key for client-side usage
-  clientSDKKey: process.env.NEXT_PUBLIC_DEVCYCLE_CLIENT_SDK_KEY ?? "",
+  clientSDKKey: process.env.NEXT_PUBLIC_DEVCYCLE_CLIENT_SDK_KEY || "",
   userGetter: getUserIdentity,
   options: {
     // Enable for streaming with Suspense

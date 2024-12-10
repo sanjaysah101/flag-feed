@@ -1,30 +1,43 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 import { protectApiRoute } from "@/lib/auth/protect-api";
 import { deleteFeed, refreshFeed } from "@/lib/services/rss.service";
 
-export const DELETE = async (_request: Request, { params }: { params: { feedId: string } }) => {
+type Params = {
+  feedId: string;
+};
+
+export const DELETE = async (_request: NextRequest, { params }: { params: Promise<Params> }): Promise<Response> => {
+  const { feedId } = await params;
   const session = await protectApiRoute();
+
   if (session instanceof NextResponse) return session;
 
+  if (!feedId) {
+    return NextResponse.json({ error: "Feed ID is required" }, { status: 400 });
+  }
+
   try {
-    await deleteFeed(params.feedId, session.user.id);
+    await deleteFeed(feedId, session.user.id);
     return NextResponse.json({ success: true });
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error(error);
     return NextResponse.json({ error: "Failed to delete feed" }, { status: 500 });
   }
 };
 
-export const PUT = async (_request: Request, { params }: { params: { feedId: string } }) => {
+export const PUT = async (_request: NextRequest, { params }: { params: Promise<Params> }): Promise<Response> => {
+  const { feedId } = await params;
   const session = await protectApiRoute();
   if (session instanceof NextResponse) return session;
 
   try {
-    const feed = await refreshFeed(params.feedId, session.user.id);
+    const feed = await refreshFeed(feedId, session.user.id);
     return NextResponse.json({ feed });
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error(error);
     return NextResponse.json({ error: "Failed to refresh feed" }, { status: 500 });
   }
 };

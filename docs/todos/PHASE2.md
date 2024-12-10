@@ -2,8 +2,8 @@
 
 ## RSS Feed System
 
-- [ ] Implement RSS parser
-- [ ] Create feed storage system
+- [x] Implement RSS parser
+- [x] Create feed storage system
 - [ ] Build feed categorization
 - [ ] Add personalization algorithm
 
