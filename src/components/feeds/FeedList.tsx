@@ -8,6 +8,7 @@ import { useToast } from "@/hooks";
 import { useFeature } from "@/hooks/useFeature";
 import { useRSSFeeds } from "@/hooks/useRSSFeeds";
 import { FLAGS } from "@/lib/devcycle/flags";
+import { cn } from "@/lib/utils";
 import type { RSSFeed, RSSItem } from "@/types/rss";
 
 import { Badge, Button } from "../ui";
@@ -20,7 +21,8 @@ export const FeedList = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const { feeds, isLoading } = useRSSFeeds();
 
-  const hasAdvancedFiltering = useFeature(FLAGS.RSS.ADVANCED_FILTERING, false);
+  const hasAdvancedFiltering = useFeature(FLAGS.RSS.ADVANCED_FILTERING);
+  const hasNewLayout = useFeature(FLAGS.UI.NEW_FEED_LAYOUT);
 
   const { deleteFeed, refreshFeed } = useRSSFeeds();
   const { toast } = useToast();
@@ -105,7 +107,9 @@ export const FeedList = () => {
         </div>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div
+        className={cn("grid gap-4", hasNewLayout ? "md:grid-cols-3 lg:grid-cols-4" : "md:grid-cols-2 lg:grid-cols-3")}
+      >
         {filteredFeeds?.map((feed: RSSFeed) => (
           <Card key={feed.id}>
             <CardHeader>

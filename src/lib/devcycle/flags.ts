@@ -2,18 +2,16 @@ export const FLAGS = {
   RSS: {
     ADVANCED_FILTERING: "rss-advanced-filtering",
     SMART_CATEGORIZATION: "rss-smart-categorization",
-    CUSTOM_SOURCES: "rss-custom-sources",
-    PERSONALIZATION: "rss-personalization",
+    CUSTOM_FEED_SOURCES: "rss-custom-sources",
+    AI_RECOMMENDATIONS: "rss-ai-recommendations",
   },
   GAMIFICATION: {
-    POINTS: "gamification-points",
     BADGES: "gamification-badges",
-    LEADERBOARD: "gamification-leaderboard",
-    ACHIEVEMENTS: "gamification-achievements",
+    WEEKLY_CHALLENGES: "gamification-challenges",
+    POINT_BOOSTS: "gamification-point-boosts",
   },
-  LEARNING: {
-    ADAPTIVE_QUIZZES: "learning-adaptive-quizzes",
-    LEARNING_PATHS: "learning-learning-paths",
-    SPACED_REPETITION: "learning-spaced-repetition",
+  UI: {
+    BETA_FEATURES: "ui-beta-features",
+    NEW_FEED_LAYOUT: "ui-new-feed-layout",
   },
 } as const;

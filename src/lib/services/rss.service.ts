@@ -5,6 +5,9 @@ import Parser from "rss-parser";
 import { prisma } from "@/lib/db/prisma";
 import type { FeedCategory, RSSFeed, RSSItem } from "@/types/rss";
 
+import { getVariableValue } from "../devcycle/config";
+import { FLAGS } from "../devcycle/flags";
+
 type CustomFeed = { author: string };
 type CustomItem = { author: string; content: string };
 
@@ -59,27 +62,49 @@ const fetchAndParseFeed = async (feed: RSSFeed): Promise<RSSItem[]> => {
   }
 };
 
+const applyCategorization = async (feeds: RSSFeed[]): Promise<RSSFeed[]> => {
+  // For now, return feeds as-is
+  // TODO: Implement AI-based categorization when feature is ready
+  return feeds;
+};
+
 export const processFeeds = async (userId: string) => {
   try {
+    // Initialize feature flags with default values if they fail
+    const [hasAdvancedFiltering, hasSmartCategorization] = await Promise.all([
+      getVariableValue(FLAGS.RSS.ADVANCED_FILTERING, false).catch(() => false),
+      getVariableValue(FLAGS.RSS.SMART_CATEGORIZATION, false).catch(() => false),
+    ]);
+
     const feeds = await prisma.feed.findMany({
       where: { userId },
       include: {
         items: {
           orderBy: { pubDate: "desc" },
-          take: 10,
+          take: hasAdvancedFiltering ? undefined : 10,
         },
       },
     });
 
-    // Return feeds with items, let client handle filtering
-    return feeds.map((feed) => ({
+    let processedFeeds = feeds.map((feed) => ({
       ...feed,
-      items: feed.items,
-    }));
+      description: feed.description || undefined,
+      items: feed.items.map((item) => ({
+        ...item,
+        author: item.author || undefined,
+        content: item.content || undefined,
+      })),
+    })) as RSSFeed[];
+
+    if (hasSmartCategorization) {
+      processedFeeds = await applyCategorization(processedFeeds);
+    }
+
+    return processedFeeds;
   } catch (error) {
     // eslint-disable-next-line no-console
-    console.error("Error processing feeds:", error);
-    throw new Error("Failed to process feeds");
+    console.error("Error processing feeds:", error instanceof Error ? error.message : error);
+    throw new Error(`Failed to process feeds: ${error instanceof Error ? error.message : "Unknown error"}`);
   }
 };
 
