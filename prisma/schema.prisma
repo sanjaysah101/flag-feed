@@ -23,13 +23,13 @@ model User {
   points        Int       @default(0)
 
   // Relations
-  feeds         Feed[]
-  feedItems     FeedItem[]
-  preferences   Preferences?
-  accounts      Account[]
-  sessions      Session[]
+  feeds              Feed[]
+  feedItems          FeedItem[]
+  preferences        Preferences?
+  accounts           Account[]
+  sessions           Session[]
   quizParticipations QuizParticipant[]
-  quizResults   QuizResult[]
+  quizResults        QuizResult[]
 }
 
 enum FeedCategory {
@@ -46,14 +46,14 @@ enum FeedCategory {
 
 model Feed {
   id          String       @id @default(uuid()) @db.Uuid
-  url         String      @db.Text
-  title       String      @db.Text
-  description String?     @db.Text
-  category    FeedCategory
-  userId      String      @db.Uuid
+  url         String       @db.Text
+  title       String       @db.Text
+  description String?      @db.Text
+  categories  String[]     @db.Text @default([])
+  userId      String       @db.Uuid
   lastFetched DateTime?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 
   // Relations
   user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -61,26 +61,27 @@ model Feed {
 }
 
 model FeedItem {
-  id          String   @id @default(uuid()) @db.Uuid
-  title       String   @db.Text
-  description String   @db.Text
-  link        String   @db.Text
-  pubDate     DateTime
-  author      String?  @db.Text
-  content     String?  @db.Text
-  isRead      Boolean  @default(false)
-  isSaved     Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  category    String?   @db.Text
-  readingTime Int?      // Estimated reading time in minutes
-  readStartTime DateTime?  // When user started reading
-  readEndTime DateTime?  // When user finished reading
+  id            String    @id @default(uuid()) @db.Uuid
+  feedId        String    @db.Uuid
+  userId        String    @db.Uuid
+  title         String    @db.Text
+  description   String?   @db.Text
+  link          String    @db.Text
+  pubDate       DateTime
+  author        String?   @db.Text
+  content       String?   @db.Text
+  category      String?   @db.Text
+  categories    String[]  @db.Text @default([])
+  readingTime   Int?
+  readStartTime DateTime?
+  readEndTime   DateTime?
+  isRead        Boolean   @default(false)
+  isSaved       Boolean   @default(false)
+  createdAt     DateTime  @default(now())
 
   // Relations
-  feed   Feed   @relation(fields: [feedId], references: [id], onDelete: Cascade)
-  feedId String @db.Uuid
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String @db.Uuid
+  feed Feed @relation(fields: [feedId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([feedId])
   @@index([userId])
@@ -89,17 +90,17 @@ model FeedItem {
 }
 
 model Preferences {
-  id            String    @id @default(uuid()) @db.Uuid
-  userId        String    @unique @db.Uuid
-  categories    String[]  @db.Text
-  readingLevel  String    @default("beginner") @db.Text
-  theme         String    @default("system") @db.Text
-  emailDigest   Boolean   @default(false)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @unique @db.Uuid
+  categories   String[] @db.Text
+  readingLevel String   @default("beginner") @db.Text
+  theme        String   @default("system") @db.Text
+  emailDigest  Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   // Relations
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // NextAuth Models
@@ -146,7 +147,7 @@ model QuizCompetition {
   completedAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-  
+
   participants QuizParticipant[]
 }
 
@@ -157,9 +158,9 @@ model QuizParticipant {
   score         Int       @default(0)
   completedAt   DateTime?
   createdAt     DateTime  @default(now())
-  
+
   competition QuizCompetition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
-  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([competitionId])
   @@index([userId])
@@ -171,10 +172,10 @@ model QuizResult {
   articleId   String   @db.Uuid
   score       Int
   completedAt DateTime
-  
+
   // Add the relation to User
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
   @@map("quiz_results")
 }

@@ -10,6 +10,13 @@ export const GET = async (request: Request) => {
     return NextResponse.json({ error: "Missing userId" }, { status: 400 });
   }
 
-  const streak = await getCurrentStreak(userId);
-  return NextResponse.json({ streak });
+  try {
+    const streak = await getCurrentStreak(userId);
+    return NextResponse.json({ streak });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Failed to fetch streak" },
+      { status: 500 }
+    );
+  }
 };

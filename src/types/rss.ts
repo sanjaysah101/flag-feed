@@ -1,42 +1,16 @@
-export type FeedCategory =
-  | "PROGRAMMING"
-  | "DEVOPS"
-  | "WEB_DEVELOPMENT"
-  | "MOBILE"
-  | "AI_ML"
-  | "CLOUD"
-  | "SECURITY"
-  | "BLOCKCHAIN"
-  | "DATA_SCIENCE";
+import { type Feed, type FeedItem } from "@prisma/client";
 
-export interface RSSFeed {
-  id: string;
-  url: string;
-  title: string;
-  description?: string;
-  category: FeedCategory;
-  userId: string;
-  lastFetched?: Date;
-  createdAt: Date;
-  updatedAt: Date;
+// Extend the base Feed type from Prisma
+export interface RSSFeed extends Feed {
   items: RSSItem[];
   isRefreshing?: boolean;
 }
 
-export interface RSSItem {
-  id: string;
-  feedId: string;
-  userId: string;
-  title: string;
-  description: string;
-  link: string;
-  pubDate: Date;
-  author?: string;
-  categories?: string[];
-  content?: string;
-  isRead?: boolean;
-  isSaved?: boolean;
-  createdAt: Date;
+// Extend the base FeedItem type from Prisma
+export interface RSSItem extends Omit<FeedItem, "isRead" | "isSaved"> {
+  categories: string[];
+  isRead: boolean;
+  isSaved: boolean;
 }
 
 export interface FeedResponse {

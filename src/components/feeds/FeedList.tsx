@@ -9,7 +9,7 @@ import { useToast } from "@/hooks";
 import { useRSSFeeds } from "@/hooks/useRSSFeeds";
 import { FLAGS } from "@/lib/devcycle/flags";
 import { cn } from "@/lib/utils";
-import type { RSSFeed, RSSItem } from "@/types/rss";
+import type { RSSFeed } from "@/types/rss";
 
 import { Badge, Button } from "../ui";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
@@ -67,18 +67,17 @@ export const FeedList = () => {
     return <div>No feeds found. Add some feeds to get started!</div>;
   }
 
-  const filteredFeeds = feeds
-    ?.map((feed: RSSFeed) => ({
-      ...feed,
-      items: hasAdvancedFiltering
-        ? feed.items.sort((a: RSSItem, b: RSSItem) => b.pubDate.getTime() - a.pubDate.getTime())
-        : feed.items,
-    }))
-    .filter((feed: RSSFeed) => {
-      if (selectedCategory !== "all" && feed.category !== selectedCategory) return false;
-      if (searchQuery && !feed.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-      return true;
-    });
+  const sortedFeeds = [...(feeds || [])].sort((a, b) => {
+    const dateA = new Date(a.pubDate);
+    const dateB = new Date(b.pubDate);
+    return dateB.getTime() - dateA.getTime();
+  });
+
+  const filteredFeeds = sortedFeeds.filter((feed: RSSFeed) => {
+    if (selectedCategory !== "all" && !feed.categories.includes(selectedCategory)) return false;
+    if (searchQuery && !feed.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    return true;
+  });
 
   return (
     <div className="space-y-6">
@@ -138,7 +137,11 @@ export const FeedList = () => {
                   </Button>
                 </div>
               </div>
-              <Badge>{feed.category}</Badge>
+              <div className="flex flex-wrap gap-2">
+                {feed.categories.map((category) => (
+                  <Badge key={category}>{category}</Badge>
+                ))}
+              </div>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">{feed.description}</p>

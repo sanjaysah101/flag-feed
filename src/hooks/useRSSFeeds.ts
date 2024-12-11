@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import type { FeedCategory, RSSFeed } from "@/types/rss";
+import type { RSSFeed } from "@/types/rss";
 
 export const useRSSFeeds = () => {
   const queryClient = useQueryClient();
@@ -91,11 +91,11 @@ export const useRSSFeeds = () => {
   });
 
   const addFeed = useMutation({
-    mutationFn: async ({ url, category }: { url: string; category: FeedCategory }) => {
+    mutationFn: async ({ url }: { url: string }) => {
       const response = await fetch("/api/feeds", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url, category }),
+        body: JSON.stringify({ url }),
       });
       if (!response.ok) {
         const errorData = await response.json();
@@ -111,11 +111,13 @@ export const useRSSFeeds = () => {
       queryClient.setQueryData<RSSFeed[]>(["feeds"], (old = []) => [
         ...old,
         {
-          id: crypto.randomUUID(), // Temporary ID
+          id: crypto.randomUUID(),
           url: newFeed.url,
-          title: newFeed.url, // Temporary title until feed is fetched
-          category: newFeed.category,
-          userId: "", // Will be set by server
+          title: newFeed.url,
+          description: null,
+          categories: [],
+          userId: "",
+          lastFetched: null,
           createdAt: new Date(),
           updatedAt: new Date(),
           items: [],

@@ -25,13 +25,13 @@ export const POST = async (request: Request) => {
   if (session instanceof NextResponse) return session;
 
   try {
-    const { url, category } = await request.json();
+    const { url } = await request.json();
 
-    if (!url || !category) {
-      return NextResponse.json({ error: "URL and category are required" }, { status: 400 });
+    if (!url) {
+      return NextResponse.json({ error: "URL is required" }, { status: 400 });
     }
 
-    const feed = await addFeed(session.user.id, url, category);
+    const feed = await addFeed(session.user.id, url);
     return NextResponse.json({ feed });
   } catch (error) {
     // eslint-disable-next-line no-console

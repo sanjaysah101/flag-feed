@@ -3,7 +3,7 @@
 import Parser from "rss-parser";
 
 import { prisma } from "@/lib/db/prisma";
-import type { FeedCategory, RSSFeed, RSSItem } from "@/types/rss";
+import type { RSSFeed, RSSItem } from "@/types/rss";
 
 import { getVariableValue } from "../devcycle/config";
 import { FLAGS } from "../devcycle/flags";
@@ -24,40 +24,62 @@ const fetchAndParseFeed = async (feed: RSSFeed): Promise<RSSItem[]> => {
   try {
     const parsedFeed = await parser.parseURL(feed.url);
 
-    // Update feed title from the parsed feed
+    // Update feed with all available categories
+    const feedCategories = Array.from(
+      new Set(
+        parsedFeed.items
+          .flatMap((item) => item.categories || [])
+          .filter(Boolean)
+          .map((cat) => cat.toUpperCase().replace(/\s+/g, "_"))
+      )
+    );
+
     await prisma.feed.update({
       where: { id: feed.id },
       data: {
         title: parsedFeed.title || feed.url,
         description: parsedFeed.description,
+        lastFetched: new Date(),
+        categories: feedCategories, // Store all unique categories
       },
     });
 
-    const items = parsedFeed.items.map((item) => ({
-      id: crypto.randomUUID(),
-      feedId: feed.id,
-      userId: feed.userId,
-      title: item.title || "",
-      description: item.contentSnippet || "",
-      link: item.link || "",
-      pubDate: new Date(item.pubDate || Date.now()),
-      author: item.creator || item.author,
-      content: item.content || item.contentSnippet || "",
-      isRead: false,
-      isSaved: false,
-      createdAt: new Date(),
-    }));
+    // Parse items with all categories
+    const parsedItems = parsedFeed.items.map((item) => {
+      const itemCategories = (item.categories || []).map((cat) => cat.toUpperCase().replace(/\s+/g, "_"));
 
-    // Save items to database, omitting categories field
+      return {
+        id: crypto.randomUUID(),
+        feedId: feed.id,
+        userId: feed.userId,
+        title: item.title || "",
+        description: item.contentSnippet || "",
+        link: item.link || "",
+        pubDate: new Date(item.pubDate || Date.now()),
+        author: item.creator || item.author || null,
+        content: item.content || item.contentSnippet || null,
+        category: itemCategories[0] || null, // Primary category
+        categories: itemCategories, // All categories
+        readingTime: null,
+        readStartTime: null,
+        readEndTime: null,
+        isRead: false,
+        isSaved: false,
+        createdAt: new Date(),
+      };
+    });
+
+    // Save items to database
     await prisma.feedItem.createMany({
-      data: items,
+      data: parsedItems,
       skipDuplicates: true,
     });
 
-    return items;
+    return parsedItems as RSSItem[];
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error("Error fetching RSS feed:", error);
+    if (error instanceof Error) {
+      throw new Error(`Failed to fetch RSS feed: ${error.message}`);
+    }
     throw new Error("Failed to fetch RSS feed");
   }
 };
@@ -108,30 +130,42 @@ export const processFeeds = async (userId: string) => {
   }
 };
 
-export const addFeed = async (userId: string, url: string, category: FeedCategory) => {
+export const addFeed = async (userId: string, url: string) => {
   try {
-    // First create the feed
+    // First parse the feed to get categories
+    const parsedFeed = await parser.parseURL(url);
+
+    // Extract and normalize categories
+    const feedCategories = Array.from(
+      new Set(
+        parsedFeed.items
+          .flatMap((item) => item.categories || [])
+          .filter(Boolean)
+          .map((cat) => cat.toUpperCase().replace(/\s+/g, "_"))
+      )
+    );
+
+    // Create the feed without category field
     const feed = await prisma.feed.create({
       data: {
         url,
-        category,
+        title: parsedFeed.title || url,
+        description: parsedFeed.description || null,
+        categories: feedCategories,
         userId,
-        title: url, // Temporary title, will be updated after fetching
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        lastFetched: new Date(),
       },
     });
 
-    // Then fetch and parse the feed
+    // Parse and save items
     const items = await fetchAndParseFeed(feed as RSSFeed);
 
-    // Return the updated feed with items
+    // Return the feed with items
     return {
       ...feed,
       items,
     };
   } catch (error) {
-    // If anything fails, clean up the feed
     if (error instanceof Error) {
       throw new Error(`Failed to add feed: ${error.message}`);
     }
