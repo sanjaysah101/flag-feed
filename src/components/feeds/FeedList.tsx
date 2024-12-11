@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 
+import { useVariableValue } from "@devcycle/nextjs-sdk";
 import { Loader2, RefreshCw, Trash2 } from "lucide-react";
 
 import { useToast } from "@/hooks";
-import { useFeature } from "@/hooks/useFeature";
 import { useRSSFeeds } from "@/hooks/useRSSFeeds";
 import { FLAGS } from "@/lib/devcycle/flags";
 import { cn } from "@/lib/utils";
@@ -21,8 +21,8 @@ export const FeedList = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const { feeds, isLoading } = useRSSFeeds();
 
-  const hasAdvancedFiltering = useFeature(FLAGS.RSS.ADVANCED_FILTERING);
-  const hasNewLayout = useFeature(FLAGS.UI.NEW_FEED_LAYOUT);
+  const hasAdvancedFiltering = useVariableValue(FLAGS.RSS.ADVANCED_FILTERING, false);
+  const hasNewLayout = useVariableValue(FLAGS.UI.NEW_FEED_LAYOUT, false);
 
   const { deleteFeed, refreshFeed } = useRSSFeeds();
   const { toast } = useToast();

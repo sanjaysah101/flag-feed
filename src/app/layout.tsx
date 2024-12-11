@@ -38,13 +38,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <AuthProvider>
-          <DevCycleClientsideProvider
-            context={{
-              ...getClientContext(),
-              enableStreaming: true,
-            }}
-          >
+        <DevCycleClientsideProvider
+          context={{
+            ...getClientContext(),
+            enableStreaming: true,
+          }}
+        >
+          <AuthProvider>
             <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
               <ReactQueryProvider>
                 <div className="relative flex min-h-screen flex-col">
@@ -55,8 +55,8 @@ export default function RootLayout({
               </ReactQueryProvider>
               <Toaster />
             </ThemeProvider>
-          </DevCycleClientsideProvider>
-        </AuthProvider>
+          </AuthProvider>
+        </DevCycleClientsideProvider>
       </body>
     </html>
   );

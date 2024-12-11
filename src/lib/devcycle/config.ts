@@ -28,8 +28,5 @@ export const { getVariableValue, getClientContext, getAllFeatures } = setupDevCy
   // Client SDK Key for client-side usage
   clientSDKKey: process.env.NEXT_PUBLIC_DEVCYCLE_CLIENT_SDK_KEY || "",
   userGetter: getUserIdentity,
-  options: {
-    // Enable for streaming with Suspense
-    enableStreaming: true,
-  },
+  options: {},
 });
