@@ -166,14 +166,15 @@ model QuizParticipant {
 }
 
 model QuizResult {
-  id          String    @id @default(uuid()) @db.Uuid
-  userId      String    @db.Uuid
-  articleId   String    @db.Uuid
+  id          String   @id @default(cuid())
+  userId      String   @db.Uuid
+  articleId   String   @db.Uuid
   score       Int
   completedAt DateTime
-  createdAt   DateTime  @default(now())
-
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  
+  // Add the relation to User
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
   @@index([userId])
+  @@map("quiz_results")
 }

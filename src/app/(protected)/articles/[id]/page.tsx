@@ -5,11 +5,16 @@ import { LiveQuiz } from "@/components/learning/LiveQuiz";
 import { Quiz } from "@/components/learning/Quiz";
 import { getFeedItem } from "@/lib/services/feed.service";
 
-export default async function ArticlePage({ params }: { params: { id: string } }) {
+interface ArticlePageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default async function ArticlePage({ params }: ArticlePageProps) {
   const session = await auth();
   if (!session?.user?.id) return null;
+  const { id } = await params;
 
-  const article = await getFeedItem(params.id);
+  const article = await getFeedItem(id);
   if (!article) notFound();
 
   return (

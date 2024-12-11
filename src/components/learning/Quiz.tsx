@@ -7,8 +7,8 @@ import { useVariableValue } from "@devcycle/nextjs-sdk";
 import { useToast } from "@/hooks";
 import { trackFeatureUsage } from "@/lib/devcycle/analytics";
 import { FLAGS } from "@/lib/devcycle/flags";
-import { generateQuestions, saveQuizResult } from "@/lib/services/quiz.service";
 
+// import { generateQuestions, saveQuizResult } from "@/lib/services/quiz.service";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Skeleton } from "../ui/skeleton";
@@ -32,7 +32,16 @@ export const Quiz = ({ articleId, userId }: { articleId: string; userId: string 
   useEffect(() => {
     const loadQuestions = async () => {
       try {
-        const generatedQuestions = await generateQuestions(articleId);
+        // const generatedQuestions = await generateQuestions(articleId);
+        const generatedQuestions: Question[] = [
+          {
+            id: "1",
+            text: "What is the main topic discussed in the article?",
+            options: ["Technology Trends", "Programming Basics", "Web Development"],
+            correctAnswer: "Technology Trends",
+            difficulty: "easy",
+          },
+        ];
         setQuestions(generatedQuestions);
       } catch (error) {
         toast({
@@ -85,7 +94,7 @@ export const Quiz = ({ articleId, userId }: { articleId: string; userId: string 
 
   if (currentQuestion >= questions.length) {
     // Save quiz result when completed
-    saveQuizResult(userId, articleId, score);
+    // saveQuizResult(userId, articleId, score);
 
     return (
       <Card>
