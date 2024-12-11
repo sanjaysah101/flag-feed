@@ -1,18 +1,31 @@
 export const FLAGS = {
-  RSS: {
-    ADVANCED_FILTERING: "rss-advanced-filtering",
-    SMART_CATEGORIZATION: "rss-smart-categorization",
-    CUSTOM_FEED_SOURCES: "rss-custom-sources",
-    AI_RECOMMENDATIONS: "rss-ai-recommendations",
+  ANALYTICS: {
+    ENABLED: "analytics-enabled",
+    TRACK_QUIZ_PERFORMANCE: "analytics-quiz-tracking",
+    TRACK_READING_HABITS: "analytics-reading-tracking",
   },
   GAMIFICATION: {
-    BADGES: "gamification-badges",
-    WEEKLY_CHALLENGES: "gamification-challenges",
     POINT_BOOST: "gamification-point-boost",
+    ACHIEVEMENTS: "gamification-achievements",
     LEADERBOARD: "gamification-leaderboard",
+    STREAKS: "gamification-streaks",
+  },
+  RSS: {
+    ADVANCED_FILTERING: "rss-advanced-filtering",
+    AI_RECOMMENDATIONS: "rss-ai-recommendations",
+    CUSTOM_SOURCES: "rss-custom-sources",
+    REALTIME_UPDATES: "rss-realtime-updates",
+    CATEGORIES: "rss-categories",
+    SMART_CATEGORIZATION: "rss-smart-categorization",
+  },
+  LEARNING: {
+    ADAPTIVE_QUIZZES: "learning-adaptive-quizzes",
+    SPACED_REPETITION: "learning-spaced-repetition",
+    LEARNING_PATHS: "learning-learning-paths",
+    LIVE_QUIZZES: "learning-live-quizzes",
   },
   UI: {
-    BETA_FEATURES: "ui-beta-features",
     NEW_FEED_LAYOUT: "ui-new-feed-layout",
+    BETA_FEATURES: "ui-beta-features",
   },
-} as const;
+};

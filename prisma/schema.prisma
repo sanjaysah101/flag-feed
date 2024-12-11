@@ -8,8 +8,8 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  url       = env("SUPABASE_DATABASE_URL")
+  directUrl = env("SUPABASE_DIRECT_URL")
 }
 
 model User {
@@ -23,11 +23,13 @@ model User {
   points        Int       @default(0)
 
   // Relations
-  feeds       Feed[]
-  feedItems   FeedItem[]
-  preferences Preferences?
-  accounts    Account[]
-  sessions    Session[]
+  feeds         Feed[]
+  feedItems     FeedItem[]
+  preferences   Preferences?
+  accounts      Account[]
+  sessions      Session[]
+  quizParticipations QuizParticipant[]
+  quizResults   QuizResult[]
 }
 
 enum FeedCategory {
@@ -69,6 +71,10 @@ model FeedItem {
   isRead      Boolean  @default(false)
   isSaved     Boolean  @default(false)
   createdAt   DateTime @default(now())
+  category    String?   @db.Text
+  readingTime Int?      // Estimated reading time in minutes
+  readStartTime DateTime?  // When user started reading
+  readEndTime DateTime?  // When user finished reading
 
   // Relations
   feed   Feed   @relation(fields: [feedId], references: [id], onDelete: Cascade)
@@ -130,4 +136,44 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model QuizCompetition {
+  id          String    @id @default(uuid()) @db.Uuid
+  articleId   String    @db.Uuid
+  status      String    @default("waiting") @db.Text
+  startTime   DateTime  @default(now())
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  participants QuizParticipant[]
+}
+
+model QuizParticipant {
+  id            String    @id @default(uuid()) @db.Uuid
+  userId        String    @db.Uuid
+  competitionId String    @db.Uuid
+  score         Int       @default(0)
+  completedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  
+  competition QuizCompetition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([competitionId])
+  @@index([userId])
+}
+
+model QuizResult {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @db.Uuid
+  articleId   String    @db.Uuid
+  score       Int
+  completedAt DateTime
+  createdAt   DateTime  @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

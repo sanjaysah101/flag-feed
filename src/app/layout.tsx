@@ -1,16 +1,15 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 
-import { DevCycleClientsideProvider } from "@devcycle/nextjs-sdk";
+// import { DevCycleClientsideProvider } from "@devcycle/nextjs-sdk";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 import { SiteHeader } from "@/components/layout/site-header";
-import { AuthProvider } from "@/components/providers/auth-provider";
 import { ThemeProvider } from "@/components/theme";
 import { Toaster } from "@/components/ui/toaster";
 import { ReactQueryProvider } from "@/lib/react-query/provider";
 
-import { getClientContext } from "../lib/devcycle/config";
+import { FeatureFlagsProvider } from "../components/providers/feature-flags-provider";
 import "./globals.css";
 
 const geistSans = localFont({
@@ -37,26 +36,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <DevCycleClientsideProvider
-          context={{
-            ...getClientContext(),
-            enableStreaming: true,
-          }}
-        >
-          <AuthProvider>
-            <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-              <ReactQueryProvider>
-                <div className="relative flex min-h-screen flex-col">
-                  <SiteHeader />
-                  <main className="flex-1">{children}</main>
-                </div>
-                <ReactQueryDevtools initialIsOpen={false} />
-              </ReactQueryProvider>
-              <Toaster />
-            </ThemeProvider>
-          </AuthProvider>
-        </DevCycleClientsideProvider>
+      <body className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-background antialiased`}>
+        <FeatureFlagsProvider>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+            <ReactQueryProvider>
+              <div className="relative flex min-h-screen flex-col">
+                <SiteHeader />
+                <main className="flex-1">
+                  <div className="container mx-auto px-4 py-6 sm:px-6 md:py-8 lg:px-8">{children}</div>
+                </main>
+              </div>
+              <ReactQueryDevtools initialIsOpen={false} />
+            </ReactQueryProvider>
+            <Toaster />
+          </ThemeProvider>
+        </FeatureFlagsProvider>
       </body>
     </html>
   );
