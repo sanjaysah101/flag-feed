@@ -1,3 +1,4 @@
+import { FeedCategory } from "@prisma/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { RSSFeed } from "@/types/rss";
@@ -91,11 +92,11 @@ export const useRSSFeeds = () => {
   });
 
   const addFeed = useMutation({
-    mutationFn: async ({ url }: { url: string }) => {
+    mutationFn: async ({ url, categories }: { url: string; categories: FeedCategory[] }) => {
       const response = await fetch("/api/feeds", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ url, categories }),
       });
       if (!response.ok) {
         const errorData = await response.json();
@@ -122,7 +123,9 @@ export const useRSSFeeds = () => {
           updatedAt: new Date(),
           items: [],
           isRefreshing: true,
-        },
+          status: "PENDING",
+          addedBy: "",
+        } as RSSFeed,
       ]);
 
       return { previousFeeds };

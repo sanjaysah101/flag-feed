@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { useVariableValue } from "@devcycle/nextjs-sdk";
-import { type FeedItem } from "@prisma/client";
-import { ArrowUpDown, Clock, RefreshCw } from "lucide-react";
+import { FeedCategory, type FeedItem } from "@prisma/client";
+import { ArrowUpDown, ChevronLeft, ChevronRight, Clock, RefreshCw } from "lucide-react";
 
 import { useSupabaseRealtime } from "@/hooks/useSupabaseRealtime";
 import { trackFeatureUsage } from "@/lib/devcycle/analytics";
@@ -21,29 +21,32 @@ interface RealtimeFeedProps {
   userId: string;
 }
 
+const ITEMS_PER_PAGE = 5;
+
 export const RealtimeFeed = ({ userId }: RealtimeFeedProps) => {
   const [items, setItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
+  const [selectedCategory, setSelectedCategory] = useState<FeedCategory | "ALL">("ALL");
   const [showUnreadOnly, setShowUnreadOnly] = useState(true);
   const [sortBy, setSortBy] = useState<"date" | "relevance">("date");
-  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [subscribedCategories, setSubscribedCategories] = useState<FeedCategory[]>([]);
 
   const hasAdvancedFiltering = useVariableValue(FLAGS.RSS.ADVANCED_FILTERING, false);
   const hasRealtime = useVariableValue(FLAGS.RSS.REALTIME_UPDATES, false);
 
-  // Fetch available categories
+  // Fetch subscribed categories
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const response = await fetch("/api/feeds/categories");
         if (!response.ok) throw new Error("Failed to fetch categories");
-        const { categories } = await response.json();
-        setAvailableCategories(["ALL", ...categories]);
+        const { subscribedCategories } = await response.json();
+        setSubscribedCategories(subscribedCategories);
       } catch (error) {
         // eslint-disable-next-line no-console
         console.error("Error fetching categories:", error);
-        setAvailableCategories(["ALL"]);
+        setSubscribedCategories([]);
       }
     };
     fetchCategories();
@@ -101,19 +104,35 @@ export const RealtimeFeed = ({ userId }: RealtimeFeedProps) => {
     });
   };
 
+  const filteredItems = items.filter((item) => {
+    if (selectedCategory !== "ALL" && item.category !== selectedCategory) return false;
+    if (showUnreadOnly && item.isRead) return false;
+    return true;
+  });
+
+  const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
+  const paginatedItems = filteredItems.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+  };
+
   return (
     <div className="space-y-4">
-      {/* Enhanced Controls */}
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           {hasAdvancedFiltering && (
             <div className="flex items-center gap-4">
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <Select
+                value={selectedCategory}
+                onValueChange={(value) => setSelectedCategory(value as FeedCategory | "ALL")}
+              >
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {availableCategories.map((category) => (
+                  <SelectItem value="ALL">All Categories</SelectItem>
+                  {subscribedCategories.map((category) => (
                     <SelectItem key={category} value={category}>
                       {category.replace(/_/g, " ")}
                     </SelectItem>
@@ -168,10 +187,9 @@ export const RealtimeFeed = ({ userId }: RealtimeFeedProps) => {
         )}
       </div>
 
-      {/* Feed Items */}
-      <div className="space-y-2">
-        {items.map((item) => (
-          <Card key={item.id} className="p-4 hover:bg-muted/50">
+      <div className="space-y-4">
+        {paginatedItems.map((item) => (
+          <Card key={item.id} className="p-4">
             <div className="flex items-start justify-between">
               <div className="space-y-1">
                 <h3 className="font-medium">{item.title}</h3>
@@ -190,6 +208,30 @@ export const RealtimeFeed = ({ userId }: RealtimeFeedProps) => {
           </Card>
         ))}
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 pt-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            Page {currentPage} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

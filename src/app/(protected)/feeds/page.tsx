@@ -2,10 +2,9 @@ import { Suspense } from "react";
 
 import { AddFeedForm } from "@/components/feeds/AddFeedForm";
 import { FeedList } from "@/components/feeds/FeedList";
-import { protectPage } from "@/lib/auth/protect";
 
 export default async function FeedsPage() {
-  await protectPage();
+  // await protectPage();
 
   return (
     <div className="container py-8">

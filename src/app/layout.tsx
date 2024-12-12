@@ -4,13 +4,11 @@ import localFont from "next/font/local";
 // import { DevCycleClientsideProvider } from "@devcycle/nextjs-sdk";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
-import { SiteHeader } from "@/components/layout/site-header";
 import { ThemeProvider } from "@/components/theme";
 import { Toaster } from "@/components/ui/toaster";
 import { ReactQueryProvider } from "@/lib/react-query/provider";
 
 import { FeatureFlagsProvider } from "../components/providers/feature-flags-provider";
-import ThemeToggle from "../components/theme/ThemeToggle";
 import "./globals.css";
 
 const geistSans = localFont({
@@ -42,8 +40,6 @@ export default function RootLayout({
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
             <ReactQueryProvider>
               <div className="relative flex min-h-screen flex-col">
-                <SiteHeader />
-                <ThemeToggle />
                 <main className="flex-1">
                   <div className="container mx-auto px-4 py-6 sm:px-6 md:py-8 lg:px-8">{children}</div>
                 </main>

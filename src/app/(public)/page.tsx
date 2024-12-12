@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 
-import { getVariableValue } from "../lib/devcycle/config";
+import { getVariableValue } from "../../lib/devcycle/config";
 
 const NewComponent = async () => {
   const session = await auth();

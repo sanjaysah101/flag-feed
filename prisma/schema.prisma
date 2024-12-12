@@ -23,13 +23,14 @@ model User {
   points        Int       @default(0)
 
   // Relations
-  feeds              Feed[]
   feedItems          FeedItem[]
   preferences        Preferences?
   accounts           Account[]
   sessions           Session[]
   quizParticipations QuizParticipant[]
   quizResults        QuizResult[]
+  addedFeeds         Feed[] @relation("AddedFeeds")
+  subscribedFeeds    Feed[] @relation("SubscribedFeeds")
 }
 
 enum FeedCategory {
@@ -42,22 +43,33 @@ enum FeedCategory {
   SECURITY
   BLOCKCHAIN
   DATA_SCIENCE
+  GENERAL
+}
+
+enum FeedStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 model Feed {
-  id          String       @id @default(uuid()) @db.Uuid
-  url         String       @db.Text
-  title       String       @db.Text
-  description String?      @db.Text
-  categories  String[]     @db.Text @default([])
-  userId      String       @db.Uuid
+  id          String     @id @default(uuid()) @db.Uuid
+  url         String     @unique
+  title       String?
+  description String?
+  categories  FeedCategory[]
+  status      FeedStatus @default(PENDING)
+  addedBy     String     @db.Uuid
   lastFetched DateTime?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
   // Relations
-  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  items FeedItem[]
+  items         FeedItem[]
+  user          User       @relation("AddedFeeds", fields: [addedBy], references: [id])
+  subscribers   User[]     @relation("SubscribedFeeds")
+
+  @@index([addedBy])
 }
 
 model FeedItem {
@@ -70,8 +82,8 @@ model FeedItem {
   pubDate       DateTime
   author        String?   @db.Text
   content       String?   @db.Text
-  category      String?   @db.Text
-  categories    String[]  @db.Text @default([])
+  category      FeedCategory @default(GENERAL)
+  categories    FeedCategory[] @default([])
   readingTime   Int?
   readStartTime DateTime?
   readEndTime   DateTime?
@@ -92,12 +104,14 @@ model FeedItem {
 model Preferences {
   id           String   @id @default(uuid()) @db.Uuid
   userId       String   @unique @db.Uuid
-  categories   String[] @db.Text
+  categories   FeedCategory[] @default([])
   readingLevel String   @default("beginner") @db.Text
   theme        String   @default("system") @db.Text
   emailDigest  Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  subscribedCategories FeedCategory[] @default([])
+  onboardingCompleted Boolean @default(false)
 
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)

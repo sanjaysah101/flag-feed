@@ -17,7 +17,7 @@ const getUserDashboardStats = async (userId: string) => {
   const [feedCount, readArticles, userStats] = await Promise.all([
     // Get total feeds count
     prisma.feed.count({
-      where: { userId },
+      where: { addedBy: userId },
     }),
     // Get articles read in last 30 days
     prisma.feedItem.count({

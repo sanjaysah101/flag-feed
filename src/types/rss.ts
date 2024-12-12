@@ -1,4 +1,4 @@
-import { type Feed, type FeedItem } from "@prisma/client";
+import { type Feed, FeedCategory, type FeedItem } from "@prisma/client";
 
 // Extend the base Feed type from Prisma
 export interface RSSFeed extends Feed {
@@ -8,7 +8,7 @@ export interface RSSFeed extends Feed {
 
 // Extend the base FeedItem type from Prisma
 export interface RSSItem extends Omit<FeedItem, "isRead" | "isSaved"> {
-  categories: string[];
+  categories: FeedCategory[];
   isRead: boolean;
   isSaved: boolean;
 }

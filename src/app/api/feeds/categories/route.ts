@@ -1,24 +1,26 @@
 import { NextResponse } from "next/server";
 
+import { FeedCategory } from "@prisma/client";
+
+import { protectApiRoute } from "@/lib/auth/protect-api";
 import { prisma } from "@/lib/db/prisma";
 
 export const GET = async () => {
   try {
-    // Get all unique categories from feeds and feed items
-    const feedCategories = await prisma.feed.findMany({
-      select: { categories: true },
+    const session = await protectApiRoute();
+    if (session instanceof NextResponse) return session;
+
+    // Get user's subscribed categories
+    const userPreferences = await prisma.preferences.findUnique({
+      where: { userId: session.user.id },
+      select: { subscribedCategories: true },
     });
 
-    const itemCategories = await prisma.feedItem.findMany({
-      select: { categories: true },
+    // Return all available categories and user's subscribed ones
+    return NextResponse.json({
+      categories: Object.values(FeedCategory),
+      subscribedCategories: userPreferences?.subscribedCategories || [],
     });
-
-    // Combine and deduplicate categories
-    const allCategories = Array.from(
-      new Set([...feedCategories.flatMap((f) => f.categories), ...itemCategories.flatMap((i) => i.categories)])
-    ).sort();
-
-    return NextResponse.json({ categories: allCategories });
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error("Error fetching categories:", error);

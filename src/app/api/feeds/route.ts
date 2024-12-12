@@ -20,22 +20,22 @@ export const GET = async () => {
   }
 };
 
-export const POST = async (request: Request) => {
-  const session = await protectApiRoute();
-  if (session instanceof NextResponse) return session;
-
+export const POST = async (req: Request) => {
   try {
-    const { url } = await request.json();
+    const session = await protectApiRoute();
+    if (session instanceof NextResponse) return session;
+
+    const { url, categories } = await req.json();
 
     if (!url) {
       return NextResponse.json({ error: "URL is required" }, { status: 400 });
     }
 
-    const feed = await addFeed(session.user.id, url);
-    return NextResponse.json({ feed });
+    const feed = await addFeed(session.user.id, url, categories);
+    return NextResponse.json(feed);
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error("Error adding feed:", error);
-    return NextResponse.json({ error: "Failed to add feed" }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Failed to add feed" }, { status: 500 });
   }
 };

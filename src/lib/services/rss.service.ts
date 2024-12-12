@@ -1,5 +1,6 @@
 "use server";
 
+import { FeedCategory } from "@prisma/client";
 import Parser from "rss-parser";
 
 import { prisma } from "@/lib/db/prisma";
@@ -20,17 +21,38 @@ const parser = new Parser<CustomFeed, CustomItem>({
   },
 });
 
+// Add category mapping function
+const mapToFeedCategory = (category: string): FeedCategory => {
+  const normalizedCategory = category.toUpperCase().replace(/[^A-Z]/g, "_");
+
+  // Map common variations to our categories
+  const categoryMap: Record<string, FeedCategory> = {
+    JAVASCRIPT: FeedCategory.PROGRAMMING,
+    TYPESCRIPT: FeedCategory.PROGRAMMING,
+    PYTHON: FeedCategory.PROGRAMMING,
+    REACT: FeedCategory.WEB_DEVELOPMENT,
+    NEXTJS: FeedCategory.WEB_DEVELOPMENT,
+    DOCKER: FeedCategory.DEVOPS,
+    KUBERNETES: FeedCategory.DEVOPS,
+    AWS: FeedCategory.CLOUD,
+    AZURE: FeedCategory.CLOUD,
+    // Add more mappings as needed
+  };
+
+  return categoryMap[normalizedCategory] || FeedCategory.GENERAL;
+};
+
 const fetchAndParseFeed = async (feed: RSSFeed): Promise<RSSItem[]> => {
   try {
     const parsedFeed = await parser.parseURL(feed.url);
 
-    // Update feed with all available categories
+    // Map feed categories to our predefined categories
     const feedCategories = Array.from(
       new Set(
         parsedFeed.items
           .flatMap((item) => item.categories || [])
           .filter(Boolean)
-          .map((cat) => cat.toUpperCase().replace(/\s+/g, "_"))
+          .map(mapToFeedCategory)
       )
     );
 
@@ -40,26 +62,28 @@ const fetchAndParseFeed = async (feed: RSSFeed): Promise<RSSItem[]> => {
         title: parsedFeed.title || feed.url,
         description: parsedFeed.description,
         lastFetched: new Date(),
-        categories: feedCategories, // Store all unique categories
+        categories: feedCategories,
       },
     });
 
-    // Parse items with all categories
+    // Parse items with mapped categories
     const parsedItems = parsedFeed.items.map((item) => {
-      const itemCategories = (item.categories || []).map((cat) => cat.toUpperCase().replace(/\s+/g, "_"));
+      const itemCategories = (item.categories || [])
+        .map(mapToFeedCategory)
+        .filter((cat, index, array) => array.indexOf(cat) === index);
 
       return {
         id: crypto.randomUUID(),
         feedId: feed.id,
-        userId: feed.userId,
+        userId: feed.addedBy,
         title: item.title || "",
         description: item.contentSnippet || "",
         link: item.link || "",
         pubDate: new Date(item.pubDate || Date.now()),
         author: item.creator || item.author || null,
         content: item.content || item.contentSnippet || null,
-        category: itemCategories[0] || null, // Primary category
-        categories: itemCategories, // All categories
+        category: itemCategories[0] || FeedCategory.GENERAL,
+        categories: itemCategories,
         readingTime: null,
         readStartTime: null,
         readEndTime: null,
@@ -99,7 +123,7 @@ export const processFeeds = async (userId: string) => {
     ]);
 
     const feeds = await prisma.feed.findMany({
-      where: { userId },
+      where: { addedBy: userId },
       include: {
         items: {
           orderBy: { pubDate: "desc" },
@@ -130,29 +154,31 @@ export const processFeeds = async (userId: string) => {
   }
 };
 
-export const addFeed = async (userId: string, url: string) => {
+export const addFeed = async (userId: string, url: string, selectedCategories: FeedCategory[]) => {
   try {
-    // First parse the feed to get categories
+    // First parse the feed to get metadata
     const parsedFeed = await parser.parseURL(url);
 
-    // Extract and normalize categories
-    const feedCategories = Array.from(
+    // Combine user-selected categories with auto-detected ones
+    const autoDetectedCategories = Array.from(
       new Set(
         parsedFeed.items
           .flatMap((item) => item.categories || [])
           .filter(Boolean)
-          .map((cat) => cat.toUpperCase().replace(/\s+/g, "_"))
+          .map(mapToFeedCategory)
       )
     );
 
-    // Create the feed without category field
+    const feedCategories = Array.from(new Set([...selectedCategories, ...autoDetectedCategories]));
+
+    // Create the feed
     const feed = await prisma.feed.create({
       data: {
         url,
         title: parsedFeed.title || url,
         description: parsedFeed.description || null,
         categories: feedCategories,
-        userId,
+        addedBy: userId,
         lastFetched: new Date(),
       },
     });
@@ -160,10 +186,25 @@ export const addFeed = async (userId: string, url: string) => {
     // Parse and save items
     const items = await fetchAndParseFeed(feed as RSSFeed);
 
-    // Return the feed with items
+    // Update user preferences with new categories
+    await prisma.preferences.upsert({
+      where: { userId },
+      create: {
+        userId,
+        subscribedCategories: feedCategories,
+      },
+      update: {
+        subscribedCategories: {
+          push: selectedCategories,
+        },
+      },
+    });
+
     return {
-      ...feed,
-      items,
+      feed: {
+        ...feed,
+        items,
+      },
     };
   } catch (error) {
     if (error instanceof Error) {
@@ -176,7 +217,7 @@ export const addFeed = async (userId: string, url: string) => {
 export const deleteFeed = async (feedId: string, userId: string) => {
   try {
     const feed = await prisma.feed.findFirst({
-      where: { id: feedId, userId },
+      where: { id: feedId, addedBy: userId },
     });
 
     if (!feed) {
@@ -198,7 +239,7 @@ export const deleteFeed = async (feedId: string, userId: string) => {
 export const refreshFeed = async (feedId: string, userId: string) => {
   try {
     const feed = await prisma.feed.findFirst({
-      where: { id: feedId, userId },
+      where: { id: feedId, addedBy: userId },
     });
 
     if (!feed) {
@@ -219,4 +260,64 @@ export const refreshFeed = async (feedId: string, userId: string) => {
     console.error("Error refreshing feed:", error);
     throw new Error("Failed to refresh feed");
   }
+};
+
+export const getRecommendedFeeds = async (userId: string, category?: FeedCategory | null) => {
+  try {
+    const userPreferences = await prisma.preferences.findUnique({
+      where: { userId },
+      select: { subscribedCategories: true },
+    });
+
+    // Get approved feeds matching user's interests
+    const recommendedFeeds = await prisma.feed.findMany({
+      where: {
+        status: "APPROVED",
+        categories: {
+          hasSome: userPreferences?.subscribedCategories || [],
+        },
+        ...(category && { categories: { has: category } }),
+        NOT: {
+          subscribers: {
+            some: { id: userId },
+          },
+        },
+      },
+      take: 10,
+      orderBy: {
+        subscribers: {
+          _count: "desc",
+        },
+      },
+    });
+
+    return recommendedFeeds;
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error("Error getting recommended feeds:", error);
+    throw error;
+  }
+};
+
+export const getFeedsByCategory = async (userId: string, category: FeedCategory) => {
+  return prisma.feed.findMany({
+    where: {
+      subscribers: {
+        some: {
+          id: userId,
+        },
+      },
+      categories: {
+        has: category,
+      },
+    },
+    include: {
+      items: {
+        orderBy: {
+          pubDate: "desc",
+        },
+        take: 10,
+      },
+    },
+  });
 };
