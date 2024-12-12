@@ -1,9 +1,5 @@
-"use client";
-
-import { useVariableValue } from "@devcycle/nextjs-sdk";
 import { Trophy } from "lucide-react";
 
-import { FLAGS } from "@/lib/devcycle/flags";
 import type { Achievement } from "@/types/gamification";
 
 import { Badge } from "../ui/badge";
@@ -14,10 +10,6 @@ interface AchievementsClientProps {
 }
 
 export const AchievementsClient = ({ initialAchievements }: AchievementsClientProps) => {
-  const hasAchievements = useVariableValue(FLAGS.GAMIFICATION.ACHIEVEMENTS, false);
-
-  if (!hasAchievements) return null;
-
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

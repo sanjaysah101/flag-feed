@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/db/prisma";
 import { FLAGS } from "@/lib/devcycle/flags";
-import type { Achievement } from "@/types/gamification";
 
 import { getVariableValue } from "../devcycle/config";
 
@@ -9,6 +8,30 @@ export const POINTS = {
   COMPLETE_QUIZ: 10,
   DAILY_STREAK: 15,
   SHARE_ARTICLE: 3,
+  DAILY_CHALLENGE: 20,
+} as const;
+
+export const ACHIEVEMENTS = {
+  CENTURY_CLUB: {
+    type: "points",
+    title: "Century Club",
+    requirement: 100,
+  },
+  AVID_READER: {
+    type: "reading",
+    title: "Avid Reader",
+    requirement: 10,
+  },
+  STREAK_MASTER: {
+    type: "streak",
+    title: "Streak Master",
+    requirement: 7,
+  },
+  SOCIAL_BUTTERFLY: {
+    type: "sharing",
+    title: "Social Butterfly",
+    requirement: 5,
+  },
 } as const;
 
 export const awardPoints = async (userId: string, action: keyof typeof POINTS) => {
@@ -25,7 +48,29 @@ export const awardPoints = async (userId: string, action: keyof typeof POINTS) =
     },
   });
 
+  // Check for point-based achievements
+  await checkPointAchievements(userId, user.points);
+
   return user.points;
+};
+
+const checkPointAchievements = async (userId: string, points: number) => {
+  if (points >= ACHIEVEMENTS.CENTURY_CLUB.requirement) {
+    await prisma.userAchievement.upsert({
+      where: {
+        userId_type: {
+          userId,
+          type: ACHIEVEMENTS.CENTURY_CLUB.type,
+        },
+      },
+      create: {
+        userId,
+        type: ACHIEVEMENTS.CENTURY_CLUB.type,
+        title: ACHIEVEMENTS.CENTURY_CLUB.title,
+      },
+      update: {},
+    });
+  }
 };
 
 export const trackReadingStreak = async (userId: string) => {
@@ -33,85 +78,120 @@ export const trackReadingStreak = async (userId: string) => {
   if (!hasStreaks) return null;
 
   const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
-
-  const lastRead = await prisma.feedItem.findFirst({
-    where: {
-      userId,
-      isRead: true,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-    select: {
-      createdAt: true,
-    },
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { lastRead: true, streak: true },
   });
 
-  if (lastRead?.createdAt.toDateString() === yesterday.toDateString()) {
+  const lastRead = user?.lastRead;
+  const yesterdayDate = new Date(today);
+  yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+
+  let newStreak = user?.streak || 0;
+
+  if (lastRead?.toDateString() === yesterdayDate.toDateString()) {
+    newStreak += 1;
     await awardPoints(userId, "DAILY_STREAK");
-    return true;
+  } else if (lastRead?.toDateString() !== today.toDateString()) {
+    newStreak = 1;
   }
 
-  return false;
-};
-
-export const getCurrentStreak = async (userId: string) => {
-  const hasStreaks = await getVariableValue(FLAGS.GAMIFICATION.STREAKS, false);
-  if (!hasStreaks) return 0;
-
-  const recentReads = await prisma.feedItem.findMany({
-    where: {
-      userId,
-      isRead: true,
-      createdAt: {
-        gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-      },
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-    select: {
-      createdAt: true,
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      lastRead: today,
+      streak: newStreak,
     },
   });
 
-  let streak = 0;
-  const today = new Date().toDateString();
-
-  for (let i = 0; i < recentReads.length; i++) {
-    const readDate = recentReads[i].createdAt.toDateString();
-    if (i === 0 && readDate === today) continue;
-    if (streak === 0 || readDate === new Date(Date.now() - streak * 24 * 60 * 60 * 1000).toDateString()) {
-      streak++;
-    } else {
-      break;
-    }
+  // Check for streak achievements
+  if (newStreak >= ACHIEVEMENTS.STREAK_MASTER.requirement) {
+    await prisma.userAchievement.upsert({
+      where: {
+        userId_type: {
+          userId,
+          type: ACHIEVEMENTS.STREAK_MASTER.type,
+        },
+      },
+      create: {
+        userId,
+        type: ACHIEVEMENTS.STREAK_MASTER.type,
+        title: ACHIEVEMENTS.STREAK_MASTER.title,
+      },
+      update: {},
+    });
   }
 
-  return streak;
+  return newStreak;
 };
 
 export const getUserStats = async (userId: string) => {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     include: {
+      achievements: true,
       feedItems: {
         where: { isRead: true },
       },
     },
   });
 
-  // Add default achievements based on stats
-  const achievements = [
-    (user?.points || 0) >= 100 && { id: "1", title: "Century Club", type: "points", awardedAt: new Date() },
-    (user?.feedItems?.length || 0) >= 10 && { id: "2", title: "Avid Reader", type: "reading", awardedAt: new Date() },
-  ].filter(Boolean) as Achievement[];
-
   return {
     points: user?.points || 0,
+    streak: user?.streak || 0,
     articlesRead: user?.feedItems.length || 0,
-    achievements,
+    achievements:
+      user?.achievements.map((a) => ({
+        id: a.id,
+        type: a.type,
+        title: a.title,
+        awardedAt: a.awardedAt.toISOString(),
+      })) || [],
+    level: Math.floor((user?.points || 0) / 100) + 1,
   };
+};
+
+export const trackArticleRead = async (userId: string, articleId: string) => {
+  // Track the read article
+  await prisma.feedItem.update({
+    where: { id: articleId },
+    data: { isRead: true },
+  });
+
+  // Award points and update streak
+  const points = await awardPoints(userId, "READ_ARTICLE");
+  const streak = await trackReadingStreak(userId);
+
+  // Check for reading achievements
+  const readCount = await prisma.feedItem.count({
+    where: { userId, isRead: true },
+  });
+
+  if (readCount >= ACHIEVEMENTS.AVID_READER.requirement) {
+    await prisma.userAchievement.upsert({
+      where: {
+        userId_type: {
+          userId,
+          type: ACHIEVEMENTS.AVID_READER.type,
+        },
+      },
+      create: {
+        userId,
+        type: ACHIEVEMENTS.AVID_READER.type,
+        title: ACHIEVEMENTS.AVID_READER.title,
+      },
+      update: {},
+    });
+  }
+
+  return { points, streak };
+};
+
+export const getCurrentStreak = async (userId: string): Promise<number> => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { streak: true },
+  });
+
+  return user?.streak || 0;
 };

@@ -17,6 +17,8 @@ export const authOptions = {
           name: profile.name || profile.login,
           email: profile.email,
           image: profile.avatar_url,
+          points: 0,
+          streak: 0,
         };
       },
     }),
@@ -25,6 +27,11 @@ export const authOptions = {
     session: async ({ session, user }: { session: Session; user: User }) => {
       if (session?.user) {
         session.user.id = user.id!;
+        const userData = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: { points: true },
+        });
+        session.user.points = userData?.points || 0;
       }
       return session;
     },

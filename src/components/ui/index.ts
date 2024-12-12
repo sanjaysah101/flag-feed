@@ -17,6 +17,7 @@ export * from "./separator";
 export * from "./sidebar";
 export * from "./slider";
 export * from "./table";
+export * from "./tabs";
 export * from "./textarea";
 export * from "./toast";
 export * from "./typography";

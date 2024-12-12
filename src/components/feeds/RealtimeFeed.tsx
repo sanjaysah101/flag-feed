@@ -1,237 +1,145 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 
 import { useVariableValue } from "@devcycle/nextjs-sdk";
-import { FeedCategory, type FeedItem } from "@prisma/client";
-import { ArrowUpDown, ChevronLeft, ChevronRight, Clock, RefreshCw } from "lucide-react";
+import { Feed, FeedItem as FeedItemType } from "@prisma/client";
+import { useSupabaseClient } from "@supabase/auth-helpers-react";
+import { BookOpen, Filter, Search, SortAsc, SortDesc } from "lucide-react";
+import { useSession } from "next-auth/react";
 
-import { useSupabaseRealtime } from "@/hooks/useSupabaseRealtime";
-import { trackFeatureUsage } from "@/lib/devcycle/analytics";
+import { toast } from "@/hooks";
+import { useGamification } from "@/hooks/useGamification";
 import { FLAGS } from "@/lib/devcycle/flags";
 
-import { toast } from "../../hooks";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
-import { Card } from "../ui/card";
-import { Checkbox } from "../ui/checkbox";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Input } from "../ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { FeedItem } from "./FeedItem";
 
 interface RealtimeFeedProps {
-  userId: string;
+  initialItems: (FeedItemType & { feed: Feed })[];
 }
 
-const ITEMS_PER_PAGE = 5;
+export const RealtimeFeed = ({ initialItems = [] }: RealtimeFeedProps) => {
+  const supabase = useSupabaseClient();
+  const { data: session } = useSession();
+  const [items, setItems] = useState(initialItems);
+  const [readCount, setReadCount] = useState(initialItems?.filter((item) => item.isRead).length || 0);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [filterBy, setFilterBy] = useState<"all" | "unread" | "read">("all");
 
-export const RealtimeFeed = ({ userId }: RealtimeFeedProps) => {
-  const [items, setItems] = useState<FeedItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState<FeedCategory | "ALL">("ALL");
-  const [showUnreadOnly, setShowUnreadOnly] = useState(true);
-  const [sortBy, setSortBy] = useState<"date" | "relevance">("date");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [subscribedCategories, setSubscribedCategories] = useState<FeedCategory[]>([]);
-
+  const hasGamification = useVariableValue(FLAGS.GAMIFICATION.ENABLED, false);
   const hasAdvancedFiltering = useVariableValue(FLAGS.RSS.ADVANCED_FILTERING, false);
-  const hasRealtime = useVariableValue(FLAGS.RSS.REALTIME_UPDATES, false);
+  const { triggerAction } = useGamification();
 
-  // Fetch subscribed categories
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await fetch("/api/feeds/categories");
-        if (!response.ok) throw new Error("Failed to fetch categories");
-        const { subscribedCategories } = await response.json();
-        setSubscribedCategories(subscribedCategories);
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error("Error fetching categories:", error);
-        setSubscribedCategories([]);
-      }
-    };
-    fetchCategories();
-  }, []);
+  const handleItemRead = async (itemId: string) => {
+    const updatedItems = items.map((item) => (item.id === itemId ? { ...item, isRead: true } : item));
+    setItems(updatedItems);
+    setReadCount((prev) => prev + 1);
 
-  // Load initial feed items
-  const loadFeedItems = useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(
-        `/api/feeds/items?userId=${userId}&category=${selectedCategory}&unreadOnly=${showUnreadOnly}&sortBy=${sortBy}`
-      );
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      setItems(data.items);
-    } catch (error) {
-      toast({
-        title: "Error loading feed items",
-        description: (error as Error).message,
-        variant: "destructive",
+    if (hasGamification) {
+      // Track reading progress in Supabase
+      await supabase.from("reading_progress").upsert({
+        user_id: session?.user?.id,
+        article_id: itemId,
+        read_at: new Date().toISOString(),
       });
-      setItems([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [userId, selectedCategory, showUnreadOnly, sortBy]);
 
-  useEffect(() => {
-    loadFeedItems();
-  }, [loadFeedItems]);
+      // Trigger gamification action
+      await triggerAction("READ_ARTICLE");
 
-  // Subscribe to realtime updates
-  useSupabaseRealtime<FeedItem>(
-    {
-      event: "INSERT",
-      schema: "public",
-      table: "FeedItem",
-      filter: `userId=eq.${userId}`,
-    },
-    (payload) => {
-      if (hasRealtime) {
-        setItems((prev) => [payload, ...prev]);
+      // Check for reading achievements
+      const { count } = await supabase
+        .from("reading_progress")
+        .select("*", { count: "exact" })
+        .eq("user_id", session?.user?.id)
+        .single();
+
+      if (count === 5) {
+        toast({
+          title: "Achievement Unlocked! 📚",
+          description: "Bookworm: Read 5 articles",
+        });
       }
     }
-  );
+  };
 
-  const handleRefresh = async () => {
-    await loadFeedItems();
-    trackFeatureUsage({
-      featureId: FLAGS.RSS.REALTIME_UPDATES,
-      userId,
-      value: true,
+  const filteredAndSortedItems = items
+    .filter((item) => {
+      if (filterBy === "read") return item.isRead;
+      if (filterBy === "unread") return !item.isRead;
+      return true;
+    })
+    .filter((item) =>
+      searchQuery
+        ? item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.description?.toLowerCase().includes(searchQuery.toLowerCase())
+        : true
+    )
+    .sort((a, b) => {
+      const dateA = new Date(a.pubDate).getTime();
+      const dateB = new Date(b.pubDate).getTime();
+      return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
     });
-  };
-
-  const filteredItems = items.filter((item) => {
-    if (selectedCategory !== "ALL" && item.category !== selectedCategory) return false;
-    if (showUnreadOnly && item.isRead) return false;
-    return true;
-  });
-
-  const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
-  const paginatedItems = filteredItems.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
-
-  const handlePageChange = (newPage: number) => {
-    setCurrentPage(newPage);
-  };
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-4">
+    <Card>
+      <CardHeader className="space-y-4">
         <div className="flex items-center justify-between">
-          {hasAdvancedFiltering && (
-            <div className="flex items-center gap-4">
-              <Select
-                value={selectedCategory}
-                onValueChange={(value) => setSelectedCategory(value as FeedCategory | "ALL")}
-              >
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ALL">All Categories</SelectItem>
-                  {subscribedCategories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category.replace(/_/g, " ")}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={sortBy} onValueChange={(value) => setSortBy(value as "date" | "relevance")}>
-                <SelectTrigger className="w-40">
-                  <Clock className="mr-2 h-4 w-4" />
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="date">Latest First</SelectItem>
-                  <SelectItem value="relevance">Most Relevant</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="unreadOnly"
-                  checked={showUnreadOnly}
-                  onCheckedChange={(checked) => setShowUnreadOnly(checked as boolean)}
-                />
-                <label htmlFor="unreadOnly" className="text-sm font-medium">
-                  Unread only
-                </label>
-              </div>
-            </div>
-          )}
-          <Button variant="ghost" size="sm" onClick={handleRefresh} disabled={loading}>
-            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-          </Button>
+          <CardTitle className="text-lg font-medium">Recent Articles</CardTitle>
+          <div className="flex items-center gap-2">
+            <BookOpen className="h-4 w-4 text-muted-foreground" />
+            <Badge variant="secondary">{readCount} Read</Badge>
+          </div>
         </div>
 
-        {hasAdvancedFiltering && items.length > 0 && (
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="text-xs">
-              {items.length} items
-            </Badge>
-            {showUnreadOnly && (
-              <Badge variant="outline" className="text-xs">
-                Unread only
-              </Badge>
-            )}
-            {selectedCategory !== "ALL" && (
-              <Badge variant="outline" className="text-xs">
-                {selectedCategory.replace("_", " ")}
-              </Badge>
-            )}
-          </div>
-        )}
-      </div>
-
-      <div className="space-y-4">
-        {paginatedItems.map((item) => (
-          <Card key={item.id} className="p-4">
-            <div className="flex items-start justify-between">
-              <div className="space-y-1">
-                <h3 className="font-medium">{item.title}</h3>
-                <p className="line-clamp-2 text-sm text-muted-foreground">{item.description}</p>
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary">{item.category}</Badge>
-                  <span className="text-xs text-muted-foreground">{new Date(item.pubDate).toLocaleDateString()}</span>
-                </div>
-              </div>
-              <Button variant="ghost" size="sm" asChild>
-                <a href={item.link} target="_blank" rel="noopener noreferrer">
-                  <ArrowUpDown className="h-4 w-4" />
-                </a>
+        {hasAdvancedFiltering && (
+          <div className="flex flex-col gap-4 sm:flex-row">
+            <div className="relative flex-1">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search articles..."
+                className="pl-8"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Select value={filterBy} onValueChange={(value) => setFilterBy(value as typeof filterBy)}>
+                <SelectTrigger className="w-[130px]">
+                  <Filter className="mr-2 h-4 w-4" />
+                  <SelectValue placeholder="Filter by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="unread">Unread</SelectItem>
+                  <SelectItem value="read">Read</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button variant="outline" size="icon" onClick={() => setSortOrder(sortOrder === "desc" ? "asc" : "desc")}>
+                {sortOrder === "desc" ? <SortDesc className="h-4 w-4" /> : <SortAsc className="h-4 w-4" />}
               </Button>
             </div>
-          </Card>
-        ))}
-      </div>
+          </div>
+        )}
+      </CardHeader>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 pt-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="text-sm text-muted-foreground">
-            Page {currentPage} of {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
-    </div>
+      <CardContent className="space-y-4">
+        {filteredAndSortedItems.map((item) => (
+          <FeedItem key={item.id} item={item} userId={session?.user?.id || ""} onRead={() => handleItemRead(item.id)} />
+        ))}
+        {filteredAndSortedItems.length === 0 && (
+          <p className="text-center text-sm text-muted-foreground">
+            {items.length === 0
+              ? "No articles yet. Add some RSS feeds to get started!"
+              : "No articles match your filters."}
+          </p>
+        )}
+      </CardContent>
+    </Card>
   );
 };
