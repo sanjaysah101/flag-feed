@@ -1,16 +1,17 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 import { useVariableValue } from "@devcycle/nextjs-sdk";
 import { Feed, FeedItem as FeedItemType } from "@prisma/client";
-import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { BookOpen, Filter, Search, SortAsc, SortDesc } from "lucide-react";
 import { useSession } from "next-auth/react";
 
 import { toast } from "@/hooks";
 import { useGamification } from "@/hooks/useGamification";
 import { FLAGS } from "@/lib/devcycle/flags";
+import { GAMIFICATION_ACTIONS } from "@/providers/GamificationProvider";
 
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -24,7 +25,6 @@ interface RealtimeFeedProps {
 }
 
 export const RealtimeFeed = ({ initialItems = [] }: RealtimeFeedProps) => {
-  const supabase = useSupabaseClient();
   const { data: session } = useSession();
   const [items, setItems] = useState(initialItems);
   const [readCount, setReadCount] = useState(initialItems?.filter((item) => item.isRead).length || 0);
@@ -41,28 +41,14 @@ export const RealtimeFeed = ({ initialItems = [] }: RealtimeFeedProps) => {
     setItems(updatedItems);
     setReadCount((prev) => prev + 1);
 
-    if (hasGamification) {
-      // Track reading progress in Supabase
-      await supabase.from("reading_progress").upsert({
-        user_id: session?.user?.id,
-        article_id: itemId,
-        read_at: new Date().toISOString(),
-      });
+    if (!hasGamification) {
+      const res = await triggerAction(GAMIFICATION_ACTIONS.READ_ARTICLE);
+      if (res) {
+        const { points } = res;
 
-      // Trigger gamification action
-      await triggerAction("READ_ARTICLE");
-
-      // Check for reading achievements
-      const { count } = await supabase
-        .from("reading_progress")
-        .select("*", { count: "exact" })
-        .eq("user_id", session?.user?.id)
-        .single();
-
-      if (count === 5) {
         toast({
           title: "Achievement Unlocked! 📚",
-          description: "Bookworm: Read 5 articles",
+          description: `Bookworm: Read ${points} articles`,
         });
       }
     }
@@ -98,7 +84,7 @@ export const RealtimeFeed = ({ initialItems = [] }: RealtimeFeedProps) => {
         </div>
 
         {hasAdvancedFiltering && (
-          <div className="flex flex-col gap-4 sm:flex-row">
+          <div className="flex flex-col gap-4 lg:flex-row">
             <div className="relative flex-1">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
@@ -128,16 +114,35 @@ export const RealtimeFeed = ({ initialItems = [] }: RealtimeFeedProps) => {
         )}
       </CardHeader>
 
-      <CardContent className="space-y-4">
-        {filteredAndSortedItems.map((item) => (
-          <FeedItem key={item.id} item={item} userId={session?.user?.id || ""} onRead={() => handleItemRead(item.id)} />
-        ))}
-        {filteredAndSortedItems.length === 0 && (
-          <p className="text-center text-sm text-muted-foreground">
-            {items.length === 0
-              ? "No articles yet. Add some RSS feeds to get started!"
-              : "No articles match your filters."}
-          </p>
+      <CardContent className="p-6">
+        {filteredAndSortedItems.length > 0 ? (
+          <div className="space-y-4">
+            {filteredAndSortedItems.map((item) => (
+              <FeedItem
+                key={item.id}
+                item={item}
+                userId={session?.user?.id || ""}
+                onRead={() => handleItemRead(item.id)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="flex min-h-[200px] flex-col items-center justify-center space-y-3 rounded-lg border border-dashed p-8 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+              <Search className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="font-medium">No articles found</h3>
+              <p className="text-sm text-muted-foreground">
+                {searchQuery ? "Try adjusting your search or filters" : "Subscribe to feeds to see articles here"}
+              </p>
+            </div>
+            {!searchQuery && (
+              <Button variant="outline" asChild>
+                <Link href="/feeds">Browse Feeds</Link>
+              </Button>
+            )}
+          </div>
         )}
       </CardContent>
     </Card>

@@ -29,4 +29,8 @@ export const FLAGS = {
     NEW_FEED_LAYOUT: "ui-new-feed-layout",
     BETA_FEATURES: "ui-beta-features",
   },
+  FEED: {
+    REALTIME_UPDATES: "feed-realtime-updates",
+    AI_RECOMMENDATIONS: "feed-ai-recommendations",
+  },
 };

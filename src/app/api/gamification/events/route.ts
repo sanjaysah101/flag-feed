@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { auth } from "@/auth";
-import { GamificationAction } from "@/hooks/useGamification";
 import { awardPoints, trackReadingStreak } from "@/lib/services/gamification.service";
+import { GamificationAction } from "@/providers/GamificationProvider";
 
 export const POST = async (req: NextRequest) => {
   try {

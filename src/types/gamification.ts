@@ -7,16 +7,12 @@ export interface Achievement {
 }
 
 export interface GamificationStats {
+  level: number;
   points: number;
   streak: number;
-  level: number;
-  articlesRead: number;
-  achievements: Array<{
-    id: string;
-    type: string;
-    title: string;
-    awardedAt: string;
-  }>;
+  pointsToNextLevel: number;
+  readArticles: number;
+  feedCount: number;
 }
 
 export interface Challenge {

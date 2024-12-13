@@ -4,8 +4,6 @@ import { AddFeedForm } from "@/components/feeds/AddFeedForm";
 import { FeedList } from "@/components/feeds/FeedList";
 
 export default async function FeedsPage() {
-  // await protectPage();
-
   return (
     <div className="container py-8">
       <h1 className="mb-8 text-3xl font-bold">Your Tech Feeds</h1>

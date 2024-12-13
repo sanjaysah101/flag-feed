@@ -4,14 +4,14 @@ import { useVariableValue } from "@devcycle/nextjs-sdk";
 import { Flame, Target, Trophy } from "lucide-react";
 
 import { FLAGS } from "@/lib/devcycle/flags";
-import { useGamificationContext } from "@/providers/GamificationProvider";
 
+import { useGamification } from "../../hooks/useGamification";
 import { Badge } from "../ui/badge";
 import { Skeleton } from "../ui/skeleton";
 import { ProgressBar } from "./ProgressBar";
 
 export const Points = () => {
-  const { stats, isLoading } = useGamificationContext();
+  const { stats, isLoading } = useGamification();
   const hasPointBoost = useVariableValue(FLAGS.GAMIFICATION.POINT_BOOST, false);
   const hasStreaks = useVariableValue(FLAGS.GAMIFICATION.STREAKS, false);
 

@@ -10,7 +10,8 @@ import { Card, CardContent } from "../ui/card";
 import { Progress } from "../ui/progress";
 
 export const GamificationOverview = () => {
-  const { points, streak, level } = useGamification();
+  const { stats } = useGamification();
+  const { points, streak, level } = stats;
   const hasPointBoost = useVariableValue(FLAGS.GAMIFICATION.POINT_BOOST, false);
 
   return (

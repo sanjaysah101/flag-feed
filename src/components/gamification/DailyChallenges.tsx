@@ -7,7 +7,7 @@ import { BookOpen, Share2, Target } from "lucide-react";
 
 import { FLAGS } from "@/lib/devcycle/flags";
 
-import { useGamificationContext } from "../../providers/GamificationProvider";
+import { useGamification } from "../../hooks/useGamification";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Progress } from "../ui/progress";
@@ -23,7 +23,7 @@ interface Challenge {
 }
 
 export const DailyChallenges = () => {
-  const { stats } = useGamificationContext();
+  const { stats } = useGamification();
   const hasPointBoost = useVariableValue(FLAGS.GAMIFICATION.POINT_BOOST, false);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
 
@@ -34,7 +34,7 @@ export const DailyChallenges = () => {
         title: "Daily Reader",
         description: "Read 3 articles today",
         target: 3,
-        current: stats.articlesRead,
+        current: stats.readArticles,
         icon: <BookOpen className="h-5 w-5 text-blue-500" />,
       },
       {
@@ -58,7 +58,7 @@ export const DailyChallenges = () => {
         icon: <Target className="h-5 w-5 text-purple-500" />,
       },
     ]);
-  }, [stats.articlesRead, hasPointBoost]);
+  }, [stats.streak, hasPointBoost, stats.readArticles]);
 
   return (
     <div className="grid gap-4 md:grid-cols-3">

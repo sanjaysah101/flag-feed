@@ -57,14 +57,14 @@ export const getUserDashboardStats = async (userId: string) => {
       where: {
         userId,
         isRead: true,
-        createdAt: {
-          gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-        },
       },
     }),
     prisma.user.findUnique({
       where: { id: userId },
-      select: { points: true },
+      select: {
+        points: true,
+        streak: true,
+      },
     }),
   ]);
 
@@ -73,5 +73,7 @@ export const getUserDashboardStats = async (userId: string) => {
     readArticles,
     level: Math.floor((userStats?.points || 0) / 100) + 1,
     pointsToNextLevel: 100 - ((userStats?.points || 0) % 100),
+    points: userStats?.points || 0,
+    streak: userStats?.streak || 0,
   };
 };

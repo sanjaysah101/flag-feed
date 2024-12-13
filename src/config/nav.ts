@@ -4,6 +4,10 @@ export const navigationItems = [
     href: "/dashboard",
   },
   {
+    title: "Feed",
+    href: "/feed",
+  },
+  {
     title: "Feeds",
     href: "/feeds",
   },
