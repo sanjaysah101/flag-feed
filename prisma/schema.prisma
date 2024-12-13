@@ -21,6 +21,10 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   points        Int       @default(0)
+  streak        Int       @default(0)
+  lastLoginDate DateTime?
+  lastRead      DateTime?
+  achievements  UserAchievement[]
 
   // Relations
   feedItems          FeedItem[]
@@ -192,4 +196,16 @@ model QuizResult {
 
   @@index([userId])
   @@map("quiz_results")
+}
+
+model UserAchievement {
+  id        String   @id @default(cuid())
+  userId    String   @db.Uuid
+  user      User     @relation(fields: [userId], references: [id])
+  type      String   // "points", "reading", "streak"
+  title     String
+  awardedAt DateTime @default(now())
+
+  @@unique([userId, type])
+  @@index([userId])
 }

@@ -4,6 +4,9 @@ import { prisma } from "@/lib/db/prisma";
 
 interface PointsData {
   points?: number;
+  streak?: number;
+  readArticles?: number;
+  feedCount?: number;
   ping?: boolean;
 }
 
@@ -18,16 +21,41 @@ export const GET = async (request: Request) => {
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     start: async (controller) => {
-      const send = (data: PointsData) => {
+      const send = async (data: PointsData) => {
+        if (!data.ping) {
+          // Get latest stats
+          const [user, readCount, feedCount] = await Promise.all([
+            prisma.user.findUnique({
+              where: { id: userId },
+              select: { points: true, streak: true },
+            }),
+            prisma.feedItem.count({
+              where: {
+                userId,
+                isRead: true,
+                createdAt: {
+                  gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+                },
+              },
+            }),
+            prisma.feed.count({
+              where: { addedBy: userId },
+            }),
+          ]);
+
+          data = {
+            ...data,
+            points: user?.points || 0,
+            streak: user?.streak || 0,
+            readArticles: readCount,
+            feedCount,
+          };
+        }
         controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
       };
 
-      // Initial points
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { points: true },
-      });
-      send({ points: user?.points || 0 });
+      // Initial data
+      await send({});
 
       // Keep connection alive
       const interval = setInterval(() => {
