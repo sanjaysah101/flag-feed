@@ -47,7 +47,7 @@ enhance the learning experience.
 #### 1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/flagfeed.git
+git clone https://github.com/sanjaysah101/flag-feed.git
 cd flagfeed
 ```
 
