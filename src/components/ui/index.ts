@@ -10,6 +10,7 @@ export * from "./dropdown-menu";
 export * from "./form";
 export * from "./input";
 export * from "./label";
+export * from "./logo";
 export * from "./password";
 export * from "./progress";
 export * from "./select";

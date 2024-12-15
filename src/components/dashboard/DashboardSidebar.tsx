@@ -24,6 +24,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  Logo,
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -93,10 +94,7 @@ export const DashboardSidebar = () => {
   return (
     <Sidebar>
       <SidebarHeader className="border-b">
-        <Link href="/dashboard" className="flex items-center gap-2 px-4 py-3">
-          <RssIcon className="h-6 w-6" />
-          <span className="text-xl font-bold">FlagFeed</span>
-        </Link>
+        <Logo />
       </SidebarHeader>
 
       <SidebarContent>

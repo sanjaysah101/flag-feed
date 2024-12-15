@@ -1,4 +1,9 @@
+"use client";
+
 import Image from "next/image";
+import { useEffect, useState } from "react";
+
+import { useTheme } from "next-themes";
 
 import { Card } from "../ui/card";
 
@@ -10,18 +15,25 @@ const technologies = [
   },
   {
     name: "Supabase",
-    logo: "/logos/supabase.svg",
+    logo: "/logos/supabase.png",
     description: "Database & Authentication",
   },
   {
     name: "Next.js",
-    logo: "/logos/nextjs.svg",
+    logoLight: "/logos/nextjs-black.svg",
+    logoDark: "/logos/nextjs-white.svg",
     description: "React Framework",
   },
-  // Add more tech stack items
 ];
 
 export const LandingTechStack = () => {
+  const { theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <div className="space-y-12">
       <div className="space-y-4 text-center">
@@ -34,7 +46,19 @@ export const LandingTechStack = () => {
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         {technologies.map((tech) => (
           <Card key={tech.name} className="flex items-center gap-4 p-6">
-            <Image src={tech.logo} alt={tech.name} width={48} height={48} />
+            {tech.name === "Next.js" ? (
+              mounted ? (
+                <Image
+                  src={(theme === "dark" ? tech.logoDark : tech.logoLight) || ""}
+                  alt={tech.name}
+                  width={48}
+                  height={48}
+                  className="dark:invert-0"
+                />
+              ) : null
+            ) : (
+              <Image src={tech.logo!} alt={tech.name} width={48} height={48} />
+            )}
             <div>
               <h3 className="font-semibold">{tech.name}</h3>
               <p className="text-sm text-muted-foreground">{tech.description}</p>

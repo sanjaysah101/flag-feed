@@ -1,34 +1,45 @@
 # FlagFeed 📰
 
 A developer-focused learning platform that combines RSS feed curation with gamification, powered by
-DevCycle feature flags.
+Supabase and DevCycle feature flags.
 
 ## Overview 🎯
 
 FlagFeed helps developers stay updated with tech content through personalized RSS feeds while making
-learning engaging through gamification. Using DevCycle's feature flag system, we progressively
-enhance the learning experience.
+learning engaging through gamification. Using Supabase's real-time capabilities and DevCycle's
+feature flag system, we progressively enhance the learning experience.
 
 ## Features ✨
 
 ### Core Features
 
-- 📚 Curated tech RSS feeds
+- 📚 Curated tech RSS feeds with real-time updates
 - 🎮 Learn-and-earn points system
 - 🚀 Progressive feature rollouts
-- ✅ Simple knowledge checks
+- ✅ Real-time quiz competitions
+- 🔄 Supabase real-time subscriptions
+- 🔐 Row Level Security implementation
 
-### Feature Flags
+### Feature Flags (DevCycle)
 
 - 🔄 Advanced feed filtering
 - 🏆 Gamification elements
 - 📊 Learning analytics
 - 🎯 Personalized content
 
+### Supabase Features
+
+- 🔄 Real-time feed updates
+- 👥 User authentication
+- 🗃️ PostgreSQL database
+- 🔒 Row Level Security
+- 🎮 Real-time quiz competitions
+- 📊 Analytics tracking
+
 ## Tech Stack 💻
 
 - **Frontend & Backend**: [Next.js 15](https://nextjs.org/)
-- **Database**: [MongoDB](https://www.mongodb.com/)
+- **Database & Auth**: [Supabase](https://supabase.com/)
 - **Feature Flags**: [DevCycle](https://devcycle.com/)
 - **Deployment**: [Vercel](https://vercel.com/)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
@@ -39,7 +50,7 @@ enhance the learning experience.
 
 - Node.js 18+
 - pnpm
-- MongoDB connection
+- Supabase project
 - DevCycle account
 
 ### Installation
