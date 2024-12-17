@@ -41,7 +41,7 @@ export const GamificationContent = ({
         </Badge>
       </div>
 
-      {!hasStreaks && (
+      {hasStreaks && (
         <div className={statsClass}>
           <div className="flex items-center gap-2">
             <Flame className="h-4 w-4 text-orange-500" />
@@ -53,7 +53,7 @@ export const GamificationContent = ({
         </div>
       )}
 
-      {!hasPointBoost && (
+      {hasPointBoost && (
         <div className={statsClass}>
           <div className="flex items-center gap-2">
             <Target className="h-4 w-4 text-green-500" />

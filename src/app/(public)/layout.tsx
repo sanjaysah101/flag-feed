@@ -4,14 +4,17 @@ import { Github } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
+import { auth } from "../../auth";
 import ThemeToggle from "../../components/theme/ThemeToggle";
 
-const PublicLayout = ({ children }: { children: React.ReactNode }) => {
+const PublicLayout = async ({ children }: { children: React.ReactNode }) => {
+  const session = await auth();
+
   return (
     <div className="relative flex min-h-screen w-full flex-col">
       {/* Enhanced header for public pages */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between px-4 md:px-8 lg:px-10">
+        <div className="flex h-16 items-center justify-between px-4 md:px-8 lg:px-10">
           <div className="flex items-center gap-6">
             {/* Logo and Brand */}
             <Link href="/" className="flex items-center gap-2">
@@ -52,21 +55,25 @@ const PublicLayout = ({ children }: { children: React.ReactNode }) => {
                 <Github className="h-5 w-5" />
               </Button>
             </Link>
-            <Link href="/auth/signin">
-              <Button>Sign In</Button>
-            </Link>
+            {session?.user ? (
+              <Link href="/dashboard">
+                <Button>Dashboard</Button>
+              </Link>
+            ) : (
+              <Link href="/auth/signin">
+                <Button>Sign In</Button>
+              </Link>
+            )}
           </div>
         </div>
       </header>
 
       {/* Main content */}
-      <main className="flex-1">
-        <div className="mx-auto max-w-screen-2xl px-4 md:px-8 lg:px-10">{children}</div>
-      </main>
+      {children}
 
       {/* Footer */}
       <footer className="mt-auto border-t">
-        <div className="container flex flex-col items-center justify-between gap-4 px-4 py-6 md:h-16 md:flex-row md:py-0">
+        <div className="flex flex-col items-center justify-between gap-4 px-4 py-6 md:h-16 md:flex-row md:py-0">
           <p className="text-center text-sm text-muted-foreground md:text-left">
             Built for{" "}
             <a
@@ -85,10 +92,10 @@ const PublicLayout = ({ children }: { children: React.ReactNode }) => {
             Hackathons
           </p>
           <div className="flex items-center gap-4">
-            <Link href="/privacy" className="text-sm text-muted-foreground hover:text-primary">
+            <Link href="/#" className="text-sm text-muted-foreground hover:text-primary">
               Privacy
             </Link>
-            <Link href="/terms" className="text-sm text-muted-foreground hover:text-primary">
+            <Link href="/#" className="text-sm text-muted-foreground hover:text-primary">
               Terms
             </Link>
           </div>

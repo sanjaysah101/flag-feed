@@ -18,7 +18,7 @@ const quickActions = [
     title: "Recent Articles",
     description: "View and manage your feed articles",
     icon: Newspaper,
-    href: "/feed",
+    href: "/articles",
     color: "text-blue-500",
     featureFlag: FLAGS.FEED.REALTIME_UPDATES,
   },

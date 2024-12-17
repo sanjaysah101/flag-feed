@@ -8,7 +8,6 @@ import type { QuizCompetition, QuizParticipant } from "@prisma/client";
 import { useSupabaseRealtime } from "@/hooks/useSupabaseRealtime";
 import { trackFeatureUsage } from "@/lib/devcycle/analytics";
 import { FLAGS } from "@/lib/devcycle/flags";
-import { createQuizCompetition, joinQuizCompetition } from "@/lib/services/quiz-competition.service";
 
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
@@ -48,9 +47,12 @@ export const LiveQuiz = ({ articleId, userId }: LiveQuizProps) => {
   const handleCreateCompetition = async () => {
     setIsLoading(true);
     try {
-      const newCompetition = await createQuizCompetition(articleId);
-      setCompetition(newCompetition);
-      await joinQuizCompetition(newCompetition.id, userId);
+      const newCompetition = await fetch("/api/quiz/competition", {
+        method: "POST",
+        body: JSON.stringify({ articleId }),
+      });
+      const data = await newCompetition.json();
+      setCompetition(data.competition);
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error("Failed to create competition:", error);
@@ -63,7 +65,10 @@ export const LiveQuiz = ({ articleId, userId }: LiveQuizProps) => {
     if (!competition) return;
     setIsLoading(true);
     try {
-      await joinQuizCompetition(competition.id, userId);
+      await fetch("/api/quiz/competition", {
+        method: "PUT",
+        body: JSON.stringify({ competitionId: competition.id }),
+      });
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error("Failed to join competition:", error);

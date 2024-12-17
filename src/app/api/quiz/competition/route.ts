@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 
 import { protectApiRoute } from "@/lib/auth/protect-api";
-import { createQuizCompetition, joinQuizCompetition } from "@/lib/services/quiz-competition.service";
+import {
+  createQuizCompetition,
+  getQuizCompetition,
+  joinQuizCompetition,
+} from "@/lib/services/quiz-competition.service";
 
 export const POST = async (request: Request) => {
   const session = await protectApiRoute();
@@ -33,4 +37,13 @@ export const PUT = async (request: Request) => {
       { status: 500 }
     );
   }
+};
+
+export const GET = async (request: Request) => {
+  const session = await protectApiRoute();
+  if (session instanceof NextResponse) return session;
+
+  const { competitionId } = await request.json();
+  const competition = await getQuizCompetition(competitionId);
+  return NextResponse.json({ competition });
 };

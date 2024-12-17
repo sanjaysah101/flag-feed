@@ -1,22 +1,6 @@
-"use client";
-
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 
-import { useVariableValue } from "@devcycle/nextjs-sdk";
-import {
-  BarChart,
-  BookOpen,
-  ChevronUp,
-  LayoutDashboard,
-  LogOut,
-  LucideIcon,
-  RssIcon,
-  Settings,
-  Trophy,
-  User2,
-} from "lucide-react";
-import { signOut } from "next-auth/react";
+import { ChevronUp, LogOut, User2 } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -36,60 +20,14 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui";
+import { getVariableValue } from "@/lib/devcycle/config";
 import { FLAGS } from "@/lib/devcycle/flags";
 
-type SidebarItem = {
-  title: string;
-  icon: LucideIcon;
-  href: string;
-  featureFlag?: string;
-};
+import { DashboardSidebarMenu } from "./DashboardSidebarMenu";
 
-const sidebarItems: SidebarItem[] = [
-  {
-    title: "Dashboard",
-    icon: LayoutDashboard,
-    href: "/dashboard",
-  },
-  {
-    title: "Feeds",
-    icon: RssIcon,
-    href: "/feeds",
-  },
-  {
-    title: "Reading List",
-    icon: BookOpen,
-    href: "/reading-list",
-  },
-  {
-    title: "Achievements",
-    icon: Trophy,
-    href: "/achievements",
-    featureFlag: FLAGS.GAMIFICATION.ENABLED,
-  },
-  {
-    title: "Analytics",
-    icon: BarChart,
-    href: "/analytics",
-    featureFlag: FLAGS.ANALYTICS.ENABLED,
-  },
-  {
-    title: "Settings",
-    icon: Settings,
-    href: "/settings",
-  },
-] as const;
-
-export const DashboardSidebar = () => {
-  const pathname = usePathname();
-  const hasGamification = useVariableValue(FLAGS.GAMIFICATION.ENABLED, false);
-  const hasAnalytics = useVariableValue(FLAGS.ANALYTICS.ENABLED, false);
-
-  const filteredItems = sidebarItems.filter((item) => {
-    if (item.featureFlag === FLAGS.GAMIFICATION.ENABLED && !hasGamification) return false;
-    if (item.featureFlag === FLAGS.ANALYTICS.ENABLED && !hasAnalytics) return false;
-    return true;
-  });
+export const DashboardSidebar = async () => {
+  const hasGamification = await getVariableValue(FLAGS.GAMIFICATION.ENABLED, false);
+  const hasAnalytics = await getVariableValue(FLAGS.ANALYTICS.ENABLED, false);
 
   return (
     <Sidebar>
@@ -101,18 +39,7 @@ export const DashboardSidebar = () => {
         <SidebarGroup>
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
-              {filteredItems.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton asChild isActive={pathname === item.href} tooltip={item.title}>
-                    <Link href={item.href}>
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
+            <DashboardSidebarMenu hasGamification={hasGamification} hasAnalytics={hasAnalytics} />
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
@@ -136,13 +63,12 @@ export const DashboardSidebar = () => {
                   <Link href="/settings">Account Settings</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => signOut({ callbackUrl: "/auth/signin" })}
-                  className="text-red-600 focus:bg-red-50 focus:text-red-600"
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Sign out</span>
-                </DropdownMenuItem>
+                <Link href="/auth/signout">
+                  <DropdownMenuItem className="flex text-red-600 focus:bg-red-50 focus:text-red-600">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Sign out</span>
+                  </DropdownMenuItem>
+                </Link>
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarMenuItem>

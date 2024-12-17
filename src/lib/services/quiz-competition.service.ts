@@ -40,3 +40,10 @@ export const submitQuizAnswer = async (competitionId: string, userId: string, sc
 
   return participant;
 };
+
+export const getQuizCompetition = async (competitionId: string) => {
+  const competition = await prisma.quizCompetition.findUnique({
+    where: { id: competitionId },
+  });
+  return competition;
+};
